@@ -4012,4 +4012,56 @@ html[data-anim-fallback='static'] .pop-word { will-change: auto; }
   }
 }
 
+/* ── Phone layout guardrails ──────────────────────────────────────── */
+/* These rules deliberately sit last: they only repair the small-screen
+   composition, without changing the established desktop layouts. */
+@media (max-width: 720px) {
+  .hero { overflow: clip; }
+  .hero-copy {
+    padding-top: 64px;
+    padding-bottom: 32px;
+    text-shadow: 0 2px 22px rgba(0, 0, 0, .62);
+  }
+  .hero-lede { max-width: 31rem; }
+  .hero-art { min-height: 310px; margin: -30px -4vw -16px; }
+  .hero-rocket {
+    z-index: 1;
+    top: 49%;
+    right: -16%;
+    width: min(230px, 64vw);
+    opacity: .32;
+  }
+  .hero-buttons { gap: 14px; flex-direction: column; align-items: flex-start; }
+  .hero-buttons .arrow-link { min-height: 44px; }
+  .slideshow-stage { contain: paint; }
+
+  .checkout-page-container { padding: 92px 16px 56px; }
+  .checkout-wrapper { width: 100%; max-width: none; }
+  .checkout-grid { grid-template-columns: minmax(0, 1fr); gap: 36px; }
+  .checkout-left, .checkout-right { min-width: 0; }
+  .checkout-overlay { padding: 12px; }
+  .checkout-modal-container {
+    width: 100%;
+    max-height: calc(100dvh - 24px);
+    padding: 20px 16px;
+    border-radius: 20px;
+  }
+  .checkout-product-card { align-items: flex-start; gap: 12px; padding: 15px 14px; }
+  .checkout-card-title-row { flex-wrap: wrap; gap: 6px; }
+  .checkout-card-title-row h3 { font-size: 1rem; line-height: 1.08; }
+  .checkout-card-subtitle { line-height: 1.35; }
+  .checkout-card-pricing { align-self: center; }
+  .form-row-2, .payment-methods-grid { grid-template-columns: 1fr; }
+  .pay-method-pill { min-height: 48px; justify-content: flex-start; padding-inline: 16px; }
+  .checkout-form input, .checkout-form select { min-height: 48px; font-size: 1rem; }
+  .checkout-submit-btn { width: 100%; min-height: 52px; }
+  .checkout-included-box { padding: 18px 16px; }
+}
+
+@media (max-width: 380px) {
+  .checkout-product-card { padding: 14px 12px; }
+  .checkout-current-price { font-size: 1.15rem; }
+  .checkout-original-price { font-size: .7rem; }
+}
+
 
