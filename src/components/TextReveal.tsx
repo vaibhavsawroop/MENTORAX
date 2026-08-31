@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { getDeviceProfile } from '../lib/device'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -54,6 +55,10 @@ export function TextPop({
 
     const targets = el.querySelectorAll('.pop-word')
     if (!targets.length) return
+
+    // Reduced-motion users get plain, always-visible text — no from-states,
+    // no triggers, nothing that could leave words stranded invisible.
+    if (getDeviceProfile().reducedMotion) return
 
     const ctx = gsap.context(() => {
       switch (mode) {

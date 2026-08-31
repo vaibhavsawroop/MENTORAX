@@ -27,11 +27,12 @@ import {
   X,
 } from 'lucide-react'
 import { studentTestimonials, faqs, type Faq } from './data'
-import { HalftoneReveal } from './components/HalftoneReveal'
 import { PageTransition } from './components/PageTransition'
-import { Clouds } from './components/canvasui/Clouds'
-import { SmoothScroll } from './components/SmoothScroll'
+import { SmoothScroll, smoothScrollTo } from './components/SmoothScroll'
+import { ScrollFX } from './components/ScrollFX'
 import { TextPop } from './components/TextReveal'
+import { getDeviceProfile } from './lib/device'
+import { HeroAurora } from './scene/HeroAurora'
 
 const navItems = [
   ['Mentorship', '/mentorship'],
@@ -41,11 +42,14 @@ const navItems = [
 ] as const
 
 const HeroScene = lazy(() => import('./scene/HeroScene').then((m) => ({ default: m.HeroScene })))
+const HalftoneReveal = lazy(() => import('./components/HalftoneReveal').then((m) => ({ default: m.HalftoneReveal })))
+const CheckoutPage = lazy(() => import('./components/Checkout').then((m) => ({ default: m.CheckoutPage })))
+const Clouds = lazy(() => import('./components/canvasui/Clouds').then((m) => ({ default: m.Clouds })))
 
 const plans = [
-  { name: 'Foundation', index: '01', note: 'A clean beginning for serious self-starters.', features: ['A complete study architecture', 'Core resource & revision map', 'Member updates and group sessions'], accent: 'lilac' },
-  { name: 'Momentum', index: '02', note: 'The considered, high-touch MentoraX experience.', features: ['Everything in Foundation', 'Personal planning conversations', 'Regular check-ins and recalibration', 'Practice & exam strategy feedback'], accent: 'lime', featured: true },
-  { name: 'Intensive', index: '03', note: 'A precise final stretch for high-stakes preparation.', features: ['Everything in Momentum', 'More focused strategy sessions', 'Exam-window support', 'Priority guidance'], accent: 'peach' },
+  { name: 'Foundation', index: '01', price: '₹1,099', note: 'A clean beginning for serious self-starters.', features: ['A complete study architecture', 'Core resource & revision map', 'Member updates and group sessions'], accent: 'lilac' },
+  { name: 'Momentum', index: '02', price: '₹4,099', note: 'The considered, high-touch MentoraX experience.', features: ['Everything in Foundation', 'Personal planning conversations', 'Regular check-ins and recalibration', 'Practice & exam strategy feedback'], accent: 'lime', featured: true },
+  { name: 'Intensive', index: '03', price: '₹2,099', note: 'A precise final stretch for high-stakes preparation.', features: ['Everything in Momentum', 'More focused strategy sessions', 'Exam-window support', 'Priority guidance'], accent: 'peach' },
 ]
 
 const materials = [
@@ -63,19 +67,20 @@ type MentorCard = {
   tone: 'violet' | 'sage' | 'coral' | 'ink'
   portrait?: string
   portraitAlt?: string
+  subjects: string[]
 }
 
 const mentors: MentorCard[] = [
-  { initials: 'R', name: 'Raj', role: 'Maths Mentor', detail: 'IISER TVM · Mentored 2,000+ students with personalised study roadmaps, weekly reviews, and accountability.', tone: 'violet', portrait: '/mentors/raj.png', portraitAlt: 'Raj, MentoraX Maths Mentor' },
-  { initials: 'B', name: 'Bhavesha', role: 'Physics Mentor', detail: 'M.Sc. Physics student at IISER Thiruvananthapuram · B.Sc. (Hons.) Physics from Gargi College, University of Delhi. Qualified IIT JAM 2025 with Rank 2000 and researches astrophysics, solar magnetic fields, and low-frequency radio observations.', tone: 'sage', portrait: '/mentors/bhavesha.png', portraitAlt: 'Bhavesha, MentoraX Physics Mentor' },
-  { initials: 'AT', name: 'Aditya Thakur', role: 'Chemistry Mentor', detail: 'BS Chemistry, IIT Madras · IAT 2026 AIR 544. PCM mentor with a major focus on Chemistry.', tone: 'coral', portrait: '/mentors/aditya-thakur.png', portraitAlt: 'Aditya Thakur, MentoraX Chemistry Mentor' },
-  { initials: 'SB', name: 'Sparsh Bansal', role: 'Biology Mentor', detail: 'IISER TVM undergraduate · PCB mentor focused on Biology, IAT & NEST preparation, and clear concept support.', tone: 'ink' },
+  { initials: 'R', name: 'Raj', role: 'Maths Mentor', detail: 'IISER TVM · Mentored 2,000+ students with personalised study roadmaps, weekly reviews, and accountability.', tone: 'violet', portrait: '/mentors/raj.png', portraitAlt: 'Raj, MentoraX Maths Mentor', subjects: ['IAT Maths', 'NEST Maths', 'Roadmaps & reviews'] },
+  { initials: 'B', name: 'Bhavesha', role: 'Physics Mentor', detail: 'M.Sc. Physics student at IISER Thiruvananthapuram · B.Sc. (Hons.) Physics from Gargi College, University of Delhi. Qualified IIT JAM 2025 with Rank 2000 and researches astrophysics, solar magnetic fields, and low-frequency radio observations.', tone: 'sage', portrait: '/mentors/bhavesha.png', portraitAlt: 'Bhavesha, MentoraX Physics Mentor', subjects: ['Mechanics', 'Electromagnetism', 'Modern Physics'] },
+  { initials: 'AT', name: 'Aditya Thakur', role: 'Chemistry Mentor', detail: 'BS Chemistry, IIT Madras · IAT 2026 AIR 544. PCM mentor with a major focus on Chemistry.', tone: 'coral', portrait: '/mentors/aditya-thakur.png', portraitAlt: 'Aditya Thakur, MentoraX Chemistry Mentor', subjects: ['Physical', 'Organic', 'Inorganic'] },
+  { initials: 'SB', name: 'Sparsh Bansal', role: 'Biology Mentor', detail: 'IISER TVM undergraduate · PCB mentor focused on Biology, IAT & NEST preparation, and clear concept support.', tone: 'ink', subjects: ['IAT Biology', 'NEST Biology', 'Concept support'] },
 ]
 
 const team = [
   ['Raj', 'Maths Mentor', 'A calm system, a clear next step, and personalised academic guidance.'],
   ['Bhavesha', 'Physics Mentor', 'Physics guidance grounded in research, clear concepts, and exam-aware thinking.'],
-  ['Team member 03', 'Operations', 'Details and portrait will be added from the source folder.'],
+  ['Dipti', 'Co-founder & Mentor', 'Co-manages MentoraX with a focus on a considered, student-centred mentorship journey.'],
   ['Team member 04', 'Student experience', 'Details and portrait will be added from the source folder.'],
 ]
 
@@ -103,7 +108,14 @@ function ScrollManager() {
 function BackToTop() {
   const [visible, setVisible] = useState(false)
   useEffect(() => {
-    const onScroll = () => setVisible(window.scrollY > 600)
+    let wasVisible = false
+    const onScroll = () => {
+      const nextVisible = window.scrollY > 600
+      if (nextVisible === wasVisible) return
+      wasVisible = nextVisible
+      setVisible(nextVisible)
+    }
+    onScroll()
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
@@ -112,7 +124,7 @@ function BackToTop() {
       {visible && (
         <motion.button
           className="back-to-top"
-          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          onClick={() => smoothScrollTo(0)}
           initial={{ opacity: 0, y: 20, scale: 0.8 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 20, scale: 0.8 }}
@@ -181,18 +193,15 @@ function AnimateIn({ children, className = '', delay = 0, pop = true }: { childr
 }
 
 function StatCounter({ target, suffix = '' }: { target: number; suffix?: string }) {
-  const [count, setCount] = useState(0)
-  const [triggered, setTriggered] = useState(false)
   const ref = useRef<HTMLSpanElement>(null)
 
   useEffect(() => {
-    if (triggered) return
     const el = ref.current
     if (!el) return
+    let frame = 0
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (!entry.isIntersecting) return
-        setTriggered(true)
         observer.disconnect()
         let startTime: number | null = null
         const duration = 1600
@@ -200,18 +209,21 @@ function StatCounter({ target, suffix = '' }: { target: number; suffix?: string 
           if (!startTime) startTime = timestamp
           const progress = Math.min((timestamp - startTime) / duration, 1)
           const eased = 1 - Math.pow(1 - progress, 3)
-          setCount(Math.floor(eased * target))
-          if (progress < 1) requestAnimationFrame(step)
+          el.textContent = `${Math.floor(eased * target)}${suffix}`
+          if (progress < 1) frame = requestAnimationFrame(step)
         }
-        requestAnimationFrame(step)
+        frame = requestAnimationFrame(step)
       },
       { threshold: 0.4 },
     )
     observer.observe(el)
-    return () => observer.disconnect()
-  }, [target, triggered])
+    return () => {
+      observer.disconnect()
+      cancelAnimationFrame(frame)
+    }
+  }, [target, suffix])
 
-  return <span ref={ref} className="stat-number">{count}{suffix}</span>
+  return <span ref={ref} className="stat-number">0{suffix}</span>
 }
 
 function Eyebrow({ children }: { children: React.ReactNode }) {
@@ -237,54 +249,46 @@ function Tilt({ children, className = '' }: { children: React.ReactNode; classNa
   return <div className={`tilt ${className}`} onMouseMove={move} onMouseLeave={leave}>{children}</div>
 }
 
-function Mark() { return <span className="mark" aria-hidden="true"><i>M</i></span> }
+function Mark() { return <img className="mark" src="/logo.png" alt="MentoraX logo" /> }
 
 function HeroShader() {
-  const reduced  = useReducedMotion()
-  const videoRef = useRef<HTMLVideoElement>(null)
-
-  // Programmatically trigger play so it works inside sandboxed iframes
-  // (React's autoPlay prop alone is not sufficient in some contexts)
-  useEffect(() => {
-    const vid = videoRef.current
-    if (!vid || reduced) return
-    vid.muted = true // must be muted before play() is called
-    vid.play().catch(() => {/* silently swallow policy rejections */})
-  }, [reduced])
-
   return (
-    <div className="hero-shader-wrap" aria-hidden="true">
-      {/* Aurora video over the CSS gradient fallback */}
-      <div className="hero-video-wrap">
-        <video
-          ref={videoRef}
-          className="hero-aurora-video"
-          src="/hero-aurora.mp4"
-          autoPlay={!reduced}
-          loop
-          muted
-          playsInline
-          disablePictureInPicture
-          preload="auto"
-        />
+    <>
+      <div className="hero-shader-wrap" aria-hidden="true">
+        <HeroAurora />
       </div>
-
-    </div>
+      <img className="hero-rocket" src="/rocket-illustration.avif" alt="MentoraX rocket illustration" aria-hidden="true" decoding="async" />
+    </>
   )
 }
 
 function ThemeSwitch() {
   const [dark, setDark] = useState(() => {
     if (typeof window === 'undefined') return false
-    return localStorage.getItem('mentorax-theme') === 'dark'
+    const saved = localStorage.getItem('mentorax-theme')
+    if (saved) return saved === 'dark'
+    // First visit: detect system preference
+    return window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false
   })
 
   useEffect(() => {
+    const root = document.documentElement
+
+    // Coordinate the switch: for ~half a second every surface that paints
+    // with the theme (backgrounds, cards, lines, shadows) eases together
+    // instead of snapping at different times.
+    root.classList.add('theming')
+    window.setTimeout(() => root.classList.remove('theming'), 550)
+
+    // Keep the browser chrome (mobile address bar, task switcher) in sync.
+    document.querySelector('meta[name="theme-color"]')
+      ?.setAttribute('content', dark ? '#08070d' : '#ffffff')
+
     if (dark) {
-      document.documentElement.setAttribute('data-theme', 'dark')
+      root.setAttribute('data-theme', 'dark')
       localStorage.setItem('mentorax-theme', 'dark')
     } else {
-      document.documentElement.removeAttribute('data-theme')
+      root.removeAttribute('data-theme')
       localStorage.setItem('mentorax-theme', 'light')
     }
   }, [dark])
@@ -322,9 +326,25 @@ function ThemeSwitch() {
 
 function Header() {
   const [open, setOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
   const { pathname } = useLocation()
   useEffect(() => setOpen(false), [pathname])
-  return <header className="site-header"><div className="header-inner"><Link className="wordmark" to="/"><Mark /><span>mentora<span className="wordmark-x">x</span></span></Link><nav className="desktop-nav" aria-label="Main navigation">{navItems.map(([label, to]) => <NavLink key={to} to={to}>{label}</NavLink>)}</nav><div className="header-actions"><ThemeSwitch /><Link className="header-contact" to="/contact">Start a conversation <ArrowUpRight size={14} /></Link><Link className="header-cta" to="/mentorship">Apply to MentoraX <ArrowRight size={15} /></Link><button className="menu-button" aria-label={open ? 'Close navigation' : 'Open navigation'} aria-expanded={open} onClick={() => setOpen(!open)}>{open ? <X /> : <Menu />}</button></div></div><AnimatePresence>{open && <motion.div className="mobile-menu" initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: .2 }}>{navItems.map(([label, to]) => <NavLink key={to} to={to}>{label}<ArrowUpRight size={17} /></NavLink>)}<Link to="/contact">Start a conversation <ArrowRight size={17} /></Link></motion.div>}</AnimatePresence></header>
+
+  // The floating island condenses once the page moves under it.
+  useEffect(() => {
+    let wasScrolled = false
+    const onScroll = () => {
+      const nextScrolled = window.scrollY > 12
+      if (nextScrolled === wasScrolled) return
+      wasScrolled = nextScrolled
+      setScrolled(nextScrolled)
+    }
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
+  return <header className={`site-header${scrolled ? ' is-scrolled' : ''}`}><div className="header-inner"><Link className="wordmark" to="/"><Mark /><span>mentora<span className="wordmark-x">x</span></span></Link><nav className="desktop-nav" aria-label="Main navigation">{navItems.map(([label, to]) => <NavLink key={to} to={to}>{label}</NavLink>)}</nav><div className="header-actions"><ThemeSwitch /><Link className="header-contact" to="/contact">Start a conversation <ArrowUpRight size={14} /></Link><Link className="header-cta" to="/mentorship">Apply to MentoraX <ArrowRight size={15} /></Link><button className="menu-button" aria-label={open ? 'Close navigation' : 'Open navigation'} aria-expanded={open} onClick={() => setOpen(!open)}>{open ? <X /> : <Menu />}</button></div></div><AnimatePresence>{open && <motion.div className="mobile-menu" initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: .2 }}>{navItems.map(([label, to]) => <NavLink key={to} to={to}>{label}<ArrowUpRight size={17} /></NavLink>)}<Link to="/contact">Start a conversation <ArrowRight size={17} /></Link></motion.div>}</AnimatePresence></header>
 }
 
 function Footer() {
@@ -334,17 +354,18 @@ function Footer() {
     window.location.href = 'intent://instagram.com/_u/vaibhavsawroop/#Intent;package=com.instagram.android;scheme=https;S.browser_fallback_url=https%3A%2F%2Fwww.instagram.com%2Fvaibhavsawroop%2F;end'
   }
 
-  return <footer className="site-footer"><div className="footer-grid"><div><Link className="wordmark footer-mark" to="/"><Mark /><span>mentora<span className="wordmark-x">x</span></span></Link><p className="footer-statement">A focused mentorship studio for IAT, NEST, CUET, and science entrance aspirants. Managed with intent by Raj &amp; Dipti.</p><div className="social-links"><a href="mailto:support@mentorax.in" aria-label="Email MentoraX"><Mail size={17} /></a></div></div><FooterColumn title="Explore" links={navItems} /><FooterColumn title="Company" links={[["Contact Us", "/contact"], ["Refund & Cancellation Policy", "/refund-policy"], ["Privacy Policy", "/privacy-policy"], ["Terms & Conditions", "/terms"]]} /><div className="footer-note"><span className="tiny-kicker">A note from us</span><p>There is no shortcut to a good path. Only better guidance along it.</p></div></div><div className="footer-bottom"><span>© 2026 MentoraX. All Rights Reserved.</span><span>Website Built By <a className="builder-credit" href="https://www.instagram.com/vaibhavsawroop" target="_blank" rel="noopener noreferrer" onClick={openBuilderInstagram}>Vaibhav Sawroop</a></span><span>Made for the long game.</span></div></footer>
+  return <footer className="site-footer"><div className="footer-grid"><div data-reveal="up"><Link className="wordmark footer-mark" to="/"><Mark /><span>mentora<span className="wordmark-x">x</span></span></Link><p className="footer-statement">A focused mentorship studio for IAT, NEST, CUET, and science entrance aspirants. Managed with intent by Raj &amp; Dipti.</p><div className="social-links"><a href="mailto:support@mentorax.in" aria-label="Email MentoraX"><Mail size={17} /></a></div></div><FooterColumn title="Explore" links={navItems} /><FooterColumn title="Company" links={[["Contact Us", "/contact"], ["Refund & Cancellation Policy", "/refund-policy"], ["Privacy Policy", "/privacy-policy"], ["Terms & Conditions", "/terms"]]} /><div className="footer-note" data-reveal="up"><span className="tiny-kicker">A note from us</span><p>There is no shortcut to a good path. Only better guidance along it.</p></div></div><div className="footer-bottom"><span>© 2026 MentoraX. All Rights Reserved.</span><span>Website Built By <a className="builder-credit" href="https://www.instagram.com/vaibhavsawroop" target="_blank" rel="noopener noreferrer" onClick={openBuilderInstagram}>Vaibhav Sawroop</a></span><span>Made for the long game.</span></div></footer>
 }
 
 function FooterColumn({ title, links }: { title: string; links: readonly (readonly [string, string])[] }) {
-  return <div className="footer-column"><span className="tiny-kicker">{title}</span>{links.map(([name, href]) => <Link key={href} to={href}>{name}</Link>)}</div>
+  return <div className="footer-column" data-reveal="up"><span className="tiny-kicker">{title}</span>{links.map(([name, href]) => <Link key={href} to={href}>{name}</Link>)}</div>
 }
 
 function Layout() {
   return (
     <SmoothScroll>
       <ScrollManager />
+      <ScrollFX />
       <Header />
       <main>
         <Outlet />
@@ -356,12 +377,38 @@ function Layout() {
   )
 }
 
+function DeferredHeroScene() {
+  const ref = useRef<HTMLDivElement>(null)
+  const [nearViewport, setNearViewport] = useState(false)
+  const { tier, reducedMotion } = getDeviceProfile()
+
+  useEffect(() => {
+    const el = ref.current
+    if (!el || tier === 'low' || reducedMotion) return
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setNearViewport(entry.isIntersecting)
+      },
+      { rootMargin: '320px' },
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [tier, reducedMotion])
+
+  return (
+    <div ref={ref} className="closing-orb" data-parallax="-0.1" aria-hidden="true">
+      <div className="hero-css-fallback" />
+      {nearViewport && <Suspense fallback={null}><HeroScene /></Suspense>}
+    </div>
+  )
+}
+
 function PageIntro({ index, eyebrow, title, italic, copy, side }: { index: string; eyebrow: string; title: string; italic?: string; copy: string; side?: string }) {
   return (
     <section className="page-intro">
       <div className="page-intro-grid">
         <AnimateIn>
-          <div className="page-index">{index}</div>
+          <div className="page-index" data-parallax="-0.18">{index}</div>
         </AnimateIn>
         <AnimateIn delay={.07}>
           <Eyebrow>{eyebrow}</Eyebrow>
@@ -488,6 +535,11 @@ function TestimonialsSection() {
 }
 
 function Home() {
+  // Low-tier devices retain the card design without allocating WebGL; capable
+  // phones keep the cloud motion at the renderer's mobile frame budget.
+  const { allowDecorativeWebGL } = getDeviceProfile()
+  const planCloudsEnabled = allowDecorativeWebGL
+
   return <>
     <section className="hero">
       <HeroShader />
@@ -507,13 +559,9 @@ function Home() {
             <Eyebrow>For IAT &amp; NEST aspirants</Eyebrow>
           </motion.div>
 
-          <motion.h1
-            initial={{ opacity: 0, y: 36 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: .8, delay: .12, ease: [0.22, 1, 0.36, 1] }}
-          >
-            The science<br />of a <em>clear</em> path.
-          </motion.h1>
+          <TextPop as="h1" mode="popup" delay={0.16}>
+            The science<br />of a clear path.
+          </TextPop>
 
           <motion.p
             className="hero-lede"
@@ -578,32 +626,32 @@ function Home() {
 
     <section className="stats-banner section-pad">
       <div className="stats-grid">
-        <div className="stat-item">
+        <div className="stat-item" data-reveal="up">
           <StatCounter target={92} suffix="+" />
           <span>IISER admits</span>
         </div>
-        <div className="stat-item">
+        <div className="stat-item" data-reveal="up">
           <StatCounter target={400} suffix="+" />
           <span>Student hours</span>
         </div>
-        <div className="stat-item">
+        <div className="stat-item" data-reveal="up">
           <StatCounter target={12} />
           <span>Strategy modules</span>
         </div>
       </div>
     </section>
 
-    <section className="manifesto section-pad"><div className="manifesto-grid"><AnimateIn><span className="oversized-number">01</span></AnimateIn><AnimateIn><div><Eyebrow>Not another content pile</Eyebrow><TextPop as="h2" mode="skew">A good plan has a <em>pulse.</em></TextPop></div></AnimateIn><AnimateIn delay={.08}><p className="body-large">At MentoraX, mentorship is built around the difference between knowing what matters and actually knowing what to do next. The feeling is calm, exact, and personal.</p><ArrowLink to="/team">Why we built this</ArrowLink></AnimateIn></div></section>
+    <section className="manifesto section-pad"><div className="manifesto-grid"><AnimateIn><span className="oversized-number" data-parallax="-0.15">01</span></AnimateIn><AnimateIn><div><Eyebrow>Not another content pile</Eyebrow><TextPop as="h2" mode="skew">A good plan has a <em>pulse.</em></TextPop></div></AnimateIn><AnimateIn delay={.08}><p className="body-large">At MentoraX, mentorship is built around the difference between knowing what matters and actually knowing what to do next. The feeling is calm, exact, and personal.</p><ArrowLink to="/team">Why we built this</ArrowLink></AnimateIn></div></section>
 
-    <section className="field-notes section-pad"><div className="section-head"><div><Eyebrow>The MentoraX field notes</Eyebrow><TextPop as="h2" mode="blur">Less static. More <em>signal.</em></TextPop></div><p>We have a bias for the few things that genuinely shift preparation forward.</p></div><div className="feature-list"><FeatureCard number="01" icon={<Compass />} title="A map you will use." text="Preparation becomes easier to trust when the next move is visible, and made for your actual week." /><FeatureCard number="02" icon={<MessageCircle />} title="A voice when you need one." text="A real mentoring relationship makes doubt smaller, faster than more content ever can." /><FeatureCard number="03" icon={<Target />} title="A rhythm that holds." text="The aim isn’t study intensity for a week. It’s a system that keeps you moving for the full arc." /></div></section>
+    <section className="field-notes section-pad"><div className="section-head"><div><Eyebrow>The MentoraX field notes</Eyebrow><TextPop as="h2" mode="blur">Less static. More <em>signal.</em></TextPop></div><p>We have a bias for the few things that genuinely shift preparation forward.</p></div><div className="feature-list" data-skew=""><FeatureCard number="01" icon={<Compass />} title="A map you will use." text="Preparation becomes easier to trust when the next move is visible, and made for your actual week." /><FeatureCard number="02" icon={<MessageCircle />} title="A voice when you need one." text="A real mentoring relationship makes doubt smaller, faster than more content ever can." /><FeatureCard number="03" icon={<Target />} title="A rhythm that holds." text="The aim isn’t study intensity for a week. It’s a system that keeps you moving for the full arc." /></div></section>
 
     <section className="way section-pad"><div className="way-top"><Eyebrow>How the work unfolds</Eyebrow><span className="tiny-kicker">A four-part sequence</span></div><div className="way-grid"><WayItem number="01" title="Orient" copy="Meet your current level with honesty and without drama." /><WayItem number="02" title="Build" copy="Turn a large ambition into a rhythm you can live with." /><WayItem number="03" title="Refine" copy="Use feedback to find the few gaps that actually matter." /><WayItem number="04" title="Perform" copy="Arrive for the exam with calm, strategy, and self-trust." /></div></section>
 
     <TestimonialsSection />
 
-    <section className="founders-section section-pad"><div className="founder-portrait-panel"><div className="founder-orbit"><span>MentoraX</span><i>✦</i><span>MentoraX</span><i>✦</i><span>MentoraX</span></div><div className="founder-initials">R <i>+</i> D</div><span className="rd-pun-label">Research &amp; Development</span><p>Managed personally by<br /><b>Raj &amp; Dipti</b></p></div><div className="founder-copy"><AnimateIn><Eyebrow>R+D — the real kind</Eyebrow><TextPop as="h2" mode="popup">Warmth is not the opposite of <em>rigour.</em></TextPop><p className="body-large">R+D at MentoraX means two things at once: Raj &amp; Dipti, and the Research &amp; Development mindset that IISER, IAT, and NEST are built on. We believe the best exam prep is also the best science education.</p><div className="founder-quote"><Quote size={21} /><p>"The aim is not to make a student busier. It's to help them become more certain."</p></div><ArrowLink to="/team">Meet the MentoraX team</ArrowLink></AnimateIn></div></section>
+    <section className="founders-section section-pad"><div className="founder-portrait-panel" data-drift="6"><div className="founder-orbit"><span>MentoraX</span><i>✦</i><span>MentoraX</span><i>✦</i><span>MentoraX</span></div><div className="founder-initials">R <i>+</i> D</div><span className="rd-pun-label">Research &amp; Development</span><p>Managed personally by<br /><b>Raj &amp; Dipti</b></p></div><div className="founder-copy"><AnimateIn><Eyebrow>R+D — the real kind</Eyebrow><TextPop as="h2" mode="popup">Warmth is not the opposite of <em>rigour.</em></TextPop><p className="body-large">R+D at MentoraX means two things at once: Raj &amp; Dipti, and the Research &amp; Development mindset that IISER, IAT, and NEST are built on. We believe the best exam prep is also the best science education.</p><div className="founder-quote"><Quote size={21} /><p>"The aim is not to make a student busier. It's to help them become more certain."</p></div><ArrowLink to="/team">Meet the MentoraX team</ArrowLink></AnimateIn></div></section>
 
-    <section className="program-preview section-pad"><AnimateIn><div className="section-head"><div><Eyebrow>Find your level of support</Eyebrow><TextPop as="h2" mode="bounce">Designed for a very real <em>journey.</em></TextPop></div><ArrowLink to="/mentorship">View the program</ArrowLink></div></AnimateIn><div className="plan-strip">{plans.map((plan, index) => <AnimateIn key={plan.name} delay={index * .06}>{plan.name === 'Foundation' || plan.name === 'Intensive' ? <Clouds className="plan-clouds" scale={1.1} speed={0.28} cover={0.12} density={1.35} shading={0.14} opacity={0.3} shadow={0.04} wind={0.45} windRadius={180} quality={0.55}><Tilt className="plan-card"><PlanCardContent plan={plan} /></Tilt></Clouds> : <Tilt className="plan-card plan-card-featured"><PlanCardContent plan={plan} /></Tilt>}</AnimateIn>)}</div></section>
+    <section className="program-preview section-pad"><AnimateIn><div className="section-head"><div><Eyebrow>Find your level of support</Eyebrow><TextPop as="h2" mode="bounce">Designed for a very real <em>journey.</em></TextPop></div><ArrowLink to="/mentorship">View the program</ArrowLink></div></AnimateIn><div className="plan-strip" data-skew="">{plans.map((plan, index) => <AnimateIn key={plan.name} delay={index * .06}>{plan.name !== 'Momentum' && planCloudsEnabled ? <Suspense fallback={<Tilt className="plan-card"><PlanCardContent plan={plan} /></Tilt>}><Clouds className="plan-clouds" scale={1.1} speed={0.38} cover={0.2} density={1.75} shading={0.3} opacity={0.65} shadow={0.1} wind={0.5} windRadius={200} quality={0.75}><Tilt className="plan-card"><PlanCardContent plan={plan} /></Tilt></Clouds></Suspense> : <Tilt className={`plan-card ${plan.featured ? 'plan-card-featured' : ''}`}><PlanCardContent plan={plan} /></Tilt>}</AnimateIn>)}</div></section>
 
     <section className="book-banner">
       <div>
@@ -619,17 +667,17 @@ function Home() {
         viewport={{ once: true, amount: 0.2 }}
         transition={{ duration: 0.85, ease: [0.16, 1, 0.3, 1] }}
       >
-        <Link to="/books" className="book-shape b-one" aria-label="IAT book — see the library">
+        <Link to="/checkout?product=iat-pyq-book" className="book-shape b-one" data-parallax="-0.22" aria-label="IAT book — Buy now">
           IAT
-          <span className="book-hover-label">View IAT guide</span>
+          <span className="book-hover-label">Buy IAT · ₹499</span>
         </Link>
-        <Link to="/books" className="book-shape b-two" aria-label="NEST book — see the library">
+        <Link to="/checkout?product=nest-pyq-book" className="book-shape b-two" data-parallax="0.14" aria-label="NEST book — Buy now">
           NEST
-          <span className="book-hover-label">View NEST guide</span>
+          <span className="book-hover-label">Buy NEST · ₹499</span>
         </Link>
-        <Link to="/books" className="book-shape b-three" aria-label="MentoraX X book — see the library">
+        <Link to="/checkout?product=all-pyq-combo" className="book-shape b-three" data-parallax="0.3" aria-label="MentoraX All Combo — Buy now">
           X
-          <span className="book-hover-label">View all</span>
+          <span className="book-hover-label">Combo · ₹799</span>
         </Link>
       </motion.div>
     </section>
@@ -646,16 +694,14 @@ function Home() {
     </section>
 
     <section className="closing section-pad closing-with-orb">
-      <div className="closing-orb" aria-hidden="true">
-        <Suspense fallback={null}><HeroScene /></Suspense>
-      </div>
+      <DeferredHeroScene />
       <AnimateIn><span className="closing-star">✦</span><TextPop as="h2" mode="popup">There is a version of preparation that feels like <em>possibility.</em></TextPop><p>Let's find the path that makes sense for you.</p><ArrowLink solid to="/contact">Start a conversation</ArrowLink></AnimateIn>
     </section>
   </>
 }
 
-function FeatureCard({ number, icon, title, text }: { number: string; icon: React.ReactNode; title: string; text: string }) { return <article className="feature-card"><div><span className="feature-number">{number}</span><span className="feature-icon">{icon}</span></div><h3>{title}</h3><p>{text}</p><ArrowUpRight className="feature-arrow" size={19} /></article> }
-function WayItem({ number, title, copy }: { number: string; title: string; copy: string }) { return <article className="way-item"><span>{number}</span><h3>{title}</h3><p>{copy}</p></article> }
+function FeatureCard({ number, icon, title, text }: { number: string; icon: React.ReactNode; title: string; text: string }) { return <article className="feature-card" data-reveal="up"><div><span className="feature-number">{number}</span><span className="feature-icon">{icon}</span></div><h3>{title}</h3><p>{text}</p><ArrowUpRight className="feature-arrow" size={19} /></article> }
+function WayItem({ number, title, copy }: { number: string; title: string; copy: string }) { return <article className="way-item" data-reveal="up"><span>{number}</span><h3>{title}</h3><p>{copy}</p></article> }
 
 function ProductWhySection() {
   const benefits = [
@@ -675,7 +721,7 @@ function ProductWhySection() {
       </div>
       <div className="product-benefits">
         {benefits.map((benefit, index) => (
-          <div className="product-benefit" key={benefit}>
+          <div className="product-benefit" data-reveal="left" key={benefit}>
             <span>0{index + 1}</span><p>{benefit}</p><Check size={17} />
           </div>
         ))}
@@ -698,7 +744,7 @@ function ProductInsideSection() {
         <p>Built to be useful while you learn, precise while you practise, and easy to return to during revision.</p>
       </div>
       <div className="product-feature-grid">
-        {features.map(([number, title, copy]) => <article className="product-feature" key={number}><span>{number}</span><h3>{title}</h3><p>{copy}</p></article>)}
+        {features.map(([number, title, copy]) => <article className="product-feature" data-reveal="up" key={number}><span>{number}</span><h3>{title}</h3><p>{copy}</p></article>)}
       </div>
     </section>
   )
@@ -719,8 +765,8 @@ function ProductLoopSection() {
   )
 }
 
-function Mentorship() { return <><PageIntro index="01" eyebrow="The MentoraX mentorship" title="A better way to be" italic="serious." copy="Structure when you need it. Space when you need to think. The program is made to support the whole arc of IAT and NEST preparation." side="For students who care deeply about what comes next." /><section className="section-pad program-design"><div className="section-head"><div><Eyebrow>The programme in practice</Eyebrow><h2>One system, <em>four dimensions.</em></h2></div></div><div className="dimension-grid"><Dimension number="01" title="Direction" copy="A preparation map with a particular answer to the question: what should I do next?" /><Dimension number="02" title="Dialogue" copy="Mentoring conversations that turn uncertainty into a sensible decision." /><Dimension number="03" title="Deliberate practice" copy="Material and problem-solving built around learning, not just finishing." /><Dimension number="04" title="Reflection" copy="Regular recalibration so your plan grows with your understanding." /></div></section><section className="pricing-area section-pad"><div className="section-head"><div><Eyebrow>Programme editions</Eyebrow><h2>Pick the pressure you <em>need.</em></h2></div><p>Pricing and final inclusions are being confirmed by the MentoraX team. Every plan below is ready to replace with the official details.</p></div><div className="pricing-cards">{plans.map((plan, index) => <AnimateIn key={plan.name} delay={index * .06}><article className={`edition-card ${plan.featured ? 'edition-card-primary' : ''}`}><span className="edition-index">{plan.index}</span>{plan.featured && <span className="edition-label">Most complete</span>}<h3>{plan.name}</h3><div className="price-tba">₹ <span>TBA</span></div><p>{plan.note}</p><ul>{plan.features.map((feature) => <li key={feature}><Check size={15} />{feature}</li>)}</ul><ArrowLink solid={!!plan.featured} to="/contact">Enquire about {plan.name}</ArrowLink></article></AnimateIn>)}</div></section><section className="material-section section-pad"><div><Eyebrow>The material desk</Eyebrow><h2>Useful things.<br /><em>In the right order.</em></h2></div><div className="material-list">{materials.map(([number, title, copy]) => <article key={number} className="material-row"><span>{number}</span><div><h3>{title}</h3><p>{copy}</p></div><a href="#materials" aria-label={`${title} link coming soon`}>Source files <ArrowUpRight size={17} /></a></article>)}</div></section><section className="section-pad"><div className="cta-panel"><Sparkles /><div><span className="tiny-kicker">The first step</span><h2>Tell us a little<br />about your <em>ambition.</em></h2></div><ArrowLink solid to="/contact">Start your enquiry</ArrowLink></div></section></> }
-function Dimension({ number, title, copy }: { number: string; title: string; copy: string }) { return <article className="dimension"><span>{number}</span><h3>{title}</h3><p>{copy}</p></article> }
+function Mentorship() { return <><PageIntro index="01" eyebrow="The MentoraX mentorship" title="A better way to be" italic="serious." copy="Structure when you need it. Space when you need to think. The program is made to support the whole arc of IAT and NEST preparation." side="For students who care deeply about what comes next." /><section className="section-pad program-design"><div className="section-head"><div><Eyebrow>The programme in practice</Eyebrow><h2>One system, <em>four dimensions.</em></h2></div></div><div className="dimension-grid" data-skew=""><Dimension number="01" title="Direction" copy="A preparation map with a particular answer to the question: what should I do next?" /><Dimension number="02" title="Dialogue" copy="Mentoring conversations that turn uncertainty into a sensible decision." /><Dimension number="03" title="Deliberate practice" copy="Material and problem-solving built around learning, not just finishing." /><Dimension number="04" title="Reflection" copy="Regular recalibration so your plan grows with your understanding." /></div></section><section className="pricing-area section-pad"><div className="section-head"><div><Eyebrow>Programme editions</Eyebrow><h2>Pick the pressure you <em>need.</em></h2></div><p>Three focused tiers — each designed to match where you are in your preparation journey.</p></div><div className="pricing-cards">{plans.map((plan, index) => <AnimateIn key={plan.name} delay={index * .06}><article className={`edition-card ${plan.featured ? 'edition-card-primary' : ''}`}><span className="edition-index">{plan.index}</span>{plan.featured && <span className="edition-label">Most complete</span>}<h3>{plan.name}</h3><div className="price-tba">{'price' in plan ? <><span>{plan.price}</span></> : <>₹ <span>TBA</span></>}</div><p>{plan.note}</p><ul>{plan.features.map((feature) => <li key={feature}><Check size={15} />{feature}</li>)}</ul><ArrowLink solid={!!plan.featured} to="/contact">Enquire about {plan.name}</ArrowLink></article></AnimateIn>)}</div></section><section className="material-section section-pad"><div><Eyebrow>The material desk</Eyebrow><h2>Useful things.<br /><em>In the right order.</em></h2></div><div className="material-list" data-skew="">{materials.map(([number, title, copy]) => <article key={number} className="material-row" data-reveal="left"><span>{number}</span><div><h3>{title}</h3><p>{copy}</p></div><a href="#materials" aria-label={`${title} link coming soon`}>Source files <ArrowUpRight size={17} /></a></article>)}</div></section><section className="section-pad"><div className="cta-panel" data-reveal="scale"><Sparkles /><div><span className="tiny-kicker">The first step</span><h2>Tell us a little<br />about your <em>ambition.</em></h2></div><ArrowLink solid to="/contact">Start your enquiry</ArrowLink></div></section></> }
+function Dimension({ number, title, copy }: { number: string; title: string; copy: string }) { return <article className="dimension" data-reveal="up"><span>{number}</span><h3>{title}</h3><p>{copy}</p></article> }
 
 function BooksHero() {
   return (
@@ -738,7 +784,7 @@ function BooksHero() {
             IAT PYQ&apos;s Solution is the complete solved question bank for the IISER Aptitude Test — built to help you understand the exam, not just finish it.
           </motion.p>
           <motion.div className="books-hero-actions" initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .65, delay: .24 }}>
-            <ArrowLink solid to="/contact?subject=iat-pyq-book">Buy the book · ₹499</ArrowLink>
+            <Link className="arrow-link solid" to="/checkout?product=iat-pyq-book">Buy the book · ₹499 <ArrowUpRight size={17} /></Link>
             <span className="books-hero-note">One-time purchase<br />Instant access · Lifetime availability</span>
           </motion.div>
           <motion.div className="books-subjects" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: .7, delay: .4 }}>
@@ -746,8 +792,8 @@ function BooksHero() {
           </motion.div>
         </div>
         <div className="books-hero-art" aria-label="IAT PYQ's Solution book">
-          <div className="books-hero-orbit books-hero-orbit-one" />
-          <div className="books-hero-orbit books-hero-orbit-two" />
+          <div className="books-hero-orbit books-hero-orbit-one" data-drift="80" />
+          <div className="books-hero-orbit books-hero-orbit-two" data-drift="-55" />
           <motion.div className="books-hero-card" initial={{ opacity: 0, y: 42, rotate: 9 }} animate={{ opacity: 1, y: 0, rotate: 5 }} transition={{ duration: .9, delay: .15, ease: [0.22, 1, 0.36, 1] }}>
             <span className="books-card-kicker">IAT Mentorax</span>
             <strong>IAT<br /><em>PYQ&apos;s</em></strong>
@@ -769,11 +815,15 @@ function BooksHero() {
   )
 }
 
-function Books() { return <><BooksHero /><section className="book-showcase section-pad"><BookProduct type="IAT" subtitle="IAT PYQ's Solution · 2017–2024" description="Practice real IAT questions, understand the concepts behind them, and learn how the exam actually asks questions." tone="plum" /><BookProduct type="NEST" subtitle="NEST PYQ's Solution · 2017–2024" description="A focused NEST edition for practising authentic questions, understanding recurring concepts, and revising with confidence." tone="teal" /></section><section className="library-note"><BookOpen /><div><Eyebrow>What makes it different?</Eyebrow><h2>Question → Concept → Approach → Solution.</h2><p>Instead of simply telling you the answer, the book helps you understand how to arrive at it. That makes PYQ practice more useful, more deliberate, and easier to revise.</p></div></section><section className="section-pad"><div className="cta-panel dark-cta"><div><span className="tiny-kicker">One-time purchase · ₹499</span><h2>Start practising with the <em>real exam.</em></h2></div><ArrowLink solid to="/contact?subject=iat-pyq-book">Get the book · ₹499</ArrowLink></div></section></> }
-function BookProduct({ type, subtitle, description, tone }: { type: string; subtitle: string; description: string; tone: string }) { return <AnimateIn><article className={`book-product ${tone}`}><div className="book-object"><div className="book-cover"><span>IAT Mentorax<br />book 01</span><strong>{type}</strong><i>{subtitle}</i><b>2017–24</b></div><div className="book-pages" /></div><div className="book-product-copy"><span className="tiny-kicker">{subtitle}</span><h2>{type} <em>edition.</em></h2><p>{description}</p><div className="product-meta"><span>Price <b>₹499</b></span><span>Format <b>Digital book</b></span><span>Access <b>Instant · lifetime</b></span></div><ArrowLink solid to="/contact?subject=iat-pyq-book">Get the book · ₹499</ArrowLink></div></article></AnimateIn> }
-function PlanCardContent({ plan }: { plan: (typeof plans)[number] }) { return <><div className="plan-top"><span>{plan.index}</span>{plan.featured && <span className="plan-badge">The MentoraX edit</span>}</div><h3>{plan.name}</h3><p>{plan.note}</p><ul>{plan.features.slice(0, 3).map((feature) => <li key={feature}><Check size={14} />{feature}</li>)}</ul><Link to="/contact" className="plan-link">Enquire <ArrowRight size={16} /></Link></> }
+function Books() { return <><BooksHero /><section className="book-showcase section-pad"><BookProduct type="IAT" subtitle="IAT PYQ's Solution · 2017–2024" description="Practice real IAT questions, understand the concepts behind them, and learn how the exam actually asks questions." tone="plum" productId="iat-pyq-book" /><BookProduct type="NEST" subtitle="NEST PYQ's Solution · 2017–2024" description="A focused NEST edition for practising authentic questions, understanding recurring concepts, and revising with confidence." tone="teal" productId="nest-pyq-book" /></section><section className="library-note" data-reveal="up"><BookOpen /><div><Eyebrow>What makes it different?</Eyebrow><h2>Question → Concept → Approach → Solution.</h2><p>Instead of simply telling you the answer, the book helps you understand how to arrive at it. That makes PYQ practice more useful, more deliberate, and easier to revise.</p></div></section><section className="section-pad"><div className="cta-panel dark-cta" data-reveal="scale"><div><span className="tiny-kicker">Mega Bundle · Save ₹199</span><h2>Master both IAT &amp; NEST in one <em>bundle.</em></h2></div><Link className="arrow-link solid" to="/checkout?product=all-pyq-combo">Get 2-in-1 Combo · ₹799 <ArrowUpRight size={17} /></Link></div></section></> }
+function BookProduct({ type, subtitle, description, tone, productId = 'iat-pyq-book' }: { type: string; subtitle: string; description: string; tone: string; productId?: string }) { return <AnimateIn><article className={`book-product ${tone}`}><div className="book-object"><div className="book-cover"><span>IAT Mentorax<br />book 01</span><strong>{type}</strong><i>{subtitle}</i><b>2017–24</b></div><div className="book-pages" /></div><div className="book-product-copy"><span className="tiny-kicker">{subtitle}</span><h2>{type} <em>edition.</em></h2><p>{description}</p><div className="product-meta"><span>Price <b>₹499</b></span><span>Format <b>Digital book</b></span><span>Access <b>Instant · lifetime</b></span></div><Link className="arrow-link solid" to={`/checkout?product=${productId}`}>Get the book · ₹499 <ArrowUpRight size={17} /></Link></div></article></AnimateIn> }
+function PlanCardContent({ plan }: { plan: (typeof plans)[number] }) { return <><div className="plan-top"><span>{plan.index}</span>{plan.featured && <span className="plan-badge">The MentoraX edit</span>}</div><h3>{plan.name}</h3>{'price' in plan && <div className="price-tba"><span>{plan.price}</span></div>}<p>{plan.note}</p><ul>{plan.features.slice(0, 3).map((feature) => <li key={feature}><Check size={14} />{feature}</li>)}</ul><Link to="/contact" className="plan-link">Enquire <ArrowRight size={16} /></Link></> }
 
-function Mentors() { return <><PageIntro index="03" eyebrow="Your dedicated mentorship team" title="Four personal mentors. One clear way" italic="forward." copy="Every MentoraX student receives academic, subject, strategy, and career guidance throughout the IAT and NEST preparation journey." side="Individual attention, fast doubt resolution, weekly progress reviews, and direct mentor support." /><section className="mentor-grid section-pad">{mentors.map((person, index) => <AnimateIn key={person.name} delay={index * .05}><article className={`mentor-card ${person.tone}`}>{person.portrait ? <HalftoneReveal className="mentor-portrait mentor-halftone" src={person.portrait} alt={person.portraitAlt ?? `${person.name}, MentoraX mentor`} inkColor={person.tone === 'sage' ? '#27463c' : '#2b214d'} paperColor={person.tone === 'sage' ? '#e8f1df' : '#eee8ff'} /> : <div className="mentor-portrait"><span>{person.initials}</span><i>MentoraX</i><div className="portrait-badge">Profile image<br />coming soon</div></div>}<div className="mentor-info"><span className="tiny-kicker">{person.role}</span><h2>{person.name}</h2><p>{person.detail}</p><button type="button">Profile details <ChevronDown size={16} /></button></div></article></AnimateIn>)}</section><section className="mentor-manifesto section-pad"><div><Eyebrow>Our approach to mentorship</Eyebrow><h2>The best mentors leave you with better <em>questions.</em></h2></div><div className="manifesto-points"><p><span>01</span>A personalised study roadmap and weekly progress review keep preparation on track.</p><p><span>02</span>Dedicated subject support makes doubts, concepts, and chapter strategy easier to solve.</p><p><span>03</span>Strategy and career guidance help turn preparation into a confident admission plan.</p></div></section></> }
+function MentorProfileCard({ person, index }: { person: MentorCard; index: number }) {
+  return <AnimateIn key={person.name} delay={index * .05}><article className={`mentor-card ${person.tone}`}><div className="mentor-portrait-wrap">{person.portrait ? <Suspense fallback={<div className="mentor-portrait mentor-halftone"><img className="halftone-fallback" src={person.portrait} alt="" /></div>}><HalftoneReveal className="mentor-portrait mentor-halftone" src={person.portrait} alt={person.portraitAlt ?? `${person.name}, MentoraX mentor`} inkColor={person.tone === 'sage' ? '#27463c' : '#2b214d'} paperColor={person.tone === 'sage' ? '#e8f1df' : '#eee8ff'} /></Suspense> : <div className="mentor-portrait"><span>{person.initials}</span><i>MentoraX</i><div className="portrait-badge">Profile image<br />coming soon</div></div>}</div><div className="mentor-info"><div className="mentor-info-top"><span className="tiny-kicker">{person.role}</span><h2>{person.name}</h2><p>{person.detail}</p></div><div className="mentor-info-bottom"><div className="mentor-chips">{person.subjects.map(subject => <span key={subject}>{subject}</span>)}</div><Link className="mentor-cta" to="/contact">Book a conversation <ArrowRight size={14} /></Link></div></div></article></AnimateIn>
+}
+
+function Mentors() { return <><div className="page-intro-compact"><PageIntro index="03" eyebrow="Your dedicated mentorship team" title="Four personal mentors. One clear way" italic="forward." copy="Every MentoraX student receives academic, subject, strategy, and career guidance throughout the IAT and NEST preparation journey." side="Individual attention, fast doubt resolution, weekly progress reviews, and direct mentor support." /></div><section className="mentor-grid section-pad">{mentors.map((person, index) => <MentorProfileCard key={person.name} person={person} index={index} />)}</section><section className="mentor-manifesto section-pad"><div><Eyebrow>Our approach to mentorship</Eyebrow><h2>The best mentors leave you with better <em>questions.</em></h2></div><div className="manifesto-points"><p><span>01</span>A personalised study roadmap and weekly progress review keep preparation on track.</p><p><span>02</span>Dedicated subject support makes doubts, concepts, and chapter strategy easier to solve.</p><p><span>03</span>Strategy and career guidance help turn preparation into a confident admission plan.</p></div></section></> }
 
 // Add `image: '/images/team/<filename>.jpg'` to each entry when portrait photos are available
 const hoverTeamMembers: HoverMemberItem[] = [
@@ -781,7 +831,7 @@ const hoverTeamMembers: HoverMemberItem[] = [
   { name: 'Bhavesha', role: 'Physics Mentor', initials: 'B', image: '/mentors/bhavesha.png' },
   { name: 'Aditya Thakur', role: 'Chemistry Mentor', initials: 'AT', image: '/mentors/aditya-thakur.png' },
   { name: 'Sparsh Bansal', role: 'Biology Mentor', initials: 'SB' },
-  { name: 'Team 03', role: 'Operations', initials: '03' },
+  { name: 'Dipti', role: 'Co-founder & Mentor', initials: 'D', image: '/mentors/dipti.png' },
   { name: 'Team 04', role: 'Student Experience', initials: '04' },
   { name: 'Team 05', role: 'Student Support', initials: '05' },
 ]
@@ -798,7 +848,7 @@ function Team() {
         scrollTarget="#team-contact"
       />
       <section id="team-contact" className="section-pad">
-        <div className="cta-panel">
+        <div className="cta-panel" data-reveal="scale">
           <Crown />
           <div>
             <span className="tiny-kicker">Want to work with us?</span>
@@ -813,9 +863,41 @@ function Team() {
 
 function Contact() {
   const [submitted, setSubmitted] = useState(false)
-  const submit = (event: FormEvent<HTMLFormElement>) => {
+  const [pending, setPending] = useState(false)
+  const [error, setError] = useState('')
+
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    setSubmitted(true)
+    const form = event.currentTarget
+    const fields = Object.fromEntries(new FormData(form).entries())
+    setPending(true)
+    setError('')
+    try {
+      // Our serverless endpoint (Vercel + Resend). Falls back to Netlify
+      // Forms below when the API isn't reachable, so the form always works.
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(fields),
+      })
+      if (!res.ok) throw new Error(`api ${res.status}`)
+      setSubmitted(true)
+    } catch {
+      try {
+        const body = new URLSearchParams(fields as Record<string, string>).toString()
+        const fallback = await fetch('/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body,
+        })
+        if (!fallback.ok) throw new Error('fallback failed')
+        setSubmitted(true)
+      } catch {
+        setError('That didn\'t go through — please email support@mentorax.in and we\'ll reply quickly.')
+      }
+    } finally {
+      setPending(false)
+    }
   }
   return (
     <>
@@ -828,14 +910,14 @@ function Contact() {
         side="For mentorship, purchase, privacy, or refund questions, email support@mentorax.in."
       />
       <section className="contact-layout section-pad">
-        <div className="contact-aside">
+        <div className="contact-aside" data-reveal="left">
           <span className="tiny-kicker">Start a conversation</span>
           <h2>Good questions<br />are a good <em>start.</em></h2>
           <p>If you are unsure which edition of MentoraX is right for you, that is exactly the kind of conversation we are here for.</p>
            <div className="contact-method"><Mail size={17} /><span><strong>Official email</strong><br /><a href="mailto:support@mentorax.in">support@mentorax.in</a></span></div>
            <div className="contact-method"><MessageCircle size={17} /><span><strong>Policy questions</strong><br />For privacy, payment, or refund support, email us directly.</span></div>
         </div>
-        <form className="contact-form" name="mentorax-enquiry" method="POST" data-netlify="true" netlify-honeypot="bot-field" onSubmit={submit}>
+        <form className="contact-form" data-reveal="right" name="mentorax-enquiry" method="POST" data-netlify="true" netlify-honeypot="bot-field" onSubmit={submit}>
           <input type="hidden" name="form-name" value="mentorax-enquiry" />
           <p className="hidden-field"><label>Do not fill this out <input name="bot-field" /></label></p>
           <AnimatePresence mode="wait">
@@ -864,8 +946,8 @@ function Contact() {
                 <label>I'm interested in<select name="interest" defaultValue=""><option value="" disabled>Select an option</option><option>Mentorship programme</option><option>Study materials</option><option>MentoraX books</option><option>General enquiry</option></select></label>
                 <label>Tell us what you are working toward*<textarea required name="message" placeholder="Share your class, goals, or the question you would like help with." /></label>
                 <div className="form-submit">
-                  <p>Please do not include passwords, payment card details, or other highly sensitive information. By submitting, you agree to our <Link to="/privacy-policy">Privacy Policy</Link>.</p>
-                  <button type="submit">Send enquiry <ArrowRight size={17} /></button>
+                  <p>{error ? <span className="form-error">{error}</span> : <>Please do not include passwords, payment card details, or other highly sensitive information. By submitting, you agree to our <Link to="/privacy-policy">Privacy Policy</Link>.</>}</p>
+                  <button type="submit" disabled={pending}>{pending ? 'Sending…' : <>Send enquiry <ArrowRight size={17} /></>}</button>
                 </div>
               </motion.div>
             )}
@@ -927,9 +1009,9 @@ const termsSections: PolicySection[] = [
 ]
 
 function Policy({ kind, intro, sections }: { kind: string; intro: string; sections: PolicySection[] }) {
-  return <><PageIntro index="Legal" eyebrow="MentoraX legal information" title={kind} copy={intro} side="Effective August 2026 · Please read this page carefully." /><section className="policy-layout section-pad"><aside><span className="tiny-kicker">On this page</span>{sections.map(({ title }, index) => <a href={`#policy-${index}`} key={title}>{title}</a>)}</aside><article><div className="policy-notice"><strong>Effective August 2026</strong><br />These policies explain how MentoraX handles access, purchases, personal information, and participation. If you have a question, contact <a href="mailto:support@mentorax.in">support@mentorax.in</a>.</div>{sections.map(({ title, text, items }, index) => <section id={`policy-${index}`} key={title}><span>{String(index + 1).padStart(2, '0')}</span><h2>{title}</h2>{text && <p>{text}</p>}{items && <ul>{items.map(item => <li key={item}>{item}</li>)}</ul>}</section>)}</article></section></>
-}
+  return <><PageIntro index="Legal" eyebrow="MentoraX legal information" title={kind} copy={intro} side="Effective August 2026 · Please read this page carefully." /><section className="policy-layout section-pad"><aside data-lenis-prevent><span className="tiny-kicker">On this page</span>{sections.map(({ title }, index) => <a href={`#policy-${index}`} key={title}>{title}</a>)}</aside><article><div className="policy-notice"><strong>Effective August 2026</strong><br />These policies explain how MentoraX handles access, purchases, personal information, and participation. If you have a question, contact <a href="mailto:support@mentorax.in">support@mentorax.in</a>.</div>{sections.map(({ title, text, items }, index) => <section id={`policy-${index}`} key={title} data-reveal="up"><span>{String(index + 1).padStart(2, '0')}</span><h2>{title}</h2>{text && <p>{text}</p>}{items && <ul>{items.map(item => <li key={item}>{item}</li>)}</ul>}</section>)}</article></section></> }
+
 
 function NotFound() { return <section className="not-found"><span>404</span><h1>This page took a different path.</h1><ArrowLink solid to="/">Return home</ArrowLink></section> }
 
-export default function App() { return <Routes><Route element={<Layout />}><Route path="/" element={<Home />} /><Route path="/mentorship" element={<Mentorship />} /><Route path="/books" element={<Books />} /><Route path="/mentors" element={<Mentors />} /><Route path="/team" element={<Team />} /><Route path="/contact" element={<Contact />} /><Route path="/refund-policy" element={<Policy kind="Refund policy" intro="A clear and considerate framework for purchase and refund conversations with MentoraX." sections={refundSections} />} /><Route path="/privacy-policy" element={<Policy kind="Privacy policy" intro="How MentoraX intends to treat the information you share with care and clarity." sections={privacySections} />} /><Route path="/terms" element={<Policy kind="Terms & conditions" intro="The shared understanding that protects the MentoraX learning environment." sections={termsSections} />} /><Route path="*" element={<NotFound />} /></Route></Routes> }
+export default function App() { return <Routes><Route element={<Layout />}><Route path="/" element={<Home />} /><Route path="/mentorship" element={<Mentorship />} /><Route path="/books" element={<Books />} /><Route path="/checkout" element={<Suspense fallback={null}><CheckoutPage /></Suspense>} /><Route path="/mentors" element={<Mentors />} /><Route path="/team" element={<Team />} /><Route path="/contact" element={<Contact />} /><Route path="/refund-policy" element={<Policy kind="Refund policy" intro="A clear and considerate framework for purchase and refund conversations with MentoraX." sections={refundSections} />} /><Route path="/privacy-policy" element={<Policy kind="Privacy policy" intro="How MentoraX intends to treat the information you share with care and clarity." sections={privacySections} />} /><Route path="/terms" element={<Policy kind="Terms & conditions" intro="The shared understanding that protects the MentoraX learning environment." sections={termsSections} />} /><Route path="*" element={<NotFound />} /></Route></Routes> }

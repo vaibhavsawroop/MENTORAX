@@ -18,7 +18,7 @@ The app runs on port 5000 via the "Start application" workflow:
 npm run dev
 ```
 
-No backend or environment secrets are required — this is a pure frontend project.
+Some backend or environment secrets are required.
 
 ## Build
 

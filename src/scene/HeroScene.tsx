@@ -1,7 +1,8 @@
 import { Float, Sparkles } from '@react-three/drei'
-import { Canvas, useFrame } from '@react-three/fiber'
+import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { useRef, useEffect, useState, useCallback } from 'react'
 import * as THREE from 'three'
+import { getDeviceProfile } from '../lib/device'
 
 function useIsMobile() {
   const [mobile, setMobile] = useState(() => window.innerWidth < 720)
@@ -16,11 +17,26 @@ function useIsMobile() {
 
 // Smooth mouse position tracked globally for efficiency
 const mouse = { x: 0, y: 0 }
-if (typeof window !== 'undefined') {
-  window.addEventListener('mousemove', (e) => {
-    mouse.x = (e.clientX / window.innerWidth) * 2 - 1
-    mouse.y = -(e.clientY / window.innerHeight) * 2 + 1
-  }, { passive: true })
+
+function FrameLimiter({ fps }: { fps: number }) {
+  const invalidate = useThree((state) => state.invalidate)
+
+  useEffect(() => {
+    const interval = 1000 / fps
+    let frame = 0
+    let last = 0
+    const tick = (now: number) => {
+      if (now - last >= interval) {
+        last = now
+        invalidate()
+      }
+      frame = requestAnimationFrame(tick)
+    }
+    frame = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(frame)
+  }, [fps, invalidate])
+
+  return null
 }
 
 // A glowing orbital ring with a traveling node
@@ -253,22 +269,35 @@ function CSSFallback() {
 export function HeroScene() {
   const mobile = useIsMobile()
   const [webglFailed, setWebglFailed] = useState(false)
+  const { tier, maxDpr, reducedMotion } = getDeviceProfile()
+
+  useEffect(() => {
+    if (mobile || reducedMotion || tier === 'low') return
+    const trackMouse = (event: MouseEvent) => {
+      mouse.x = (event.clientX / window.innerWidth) * 2 - 1
+      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1
+    }
+    window.addEventListener('mousemove', trackMouse, { passive: true })
+    return () => window.removeEventListener('mousemove', trackMouse)
+  }, [mobile, reducedMotion, tier])
 
   const handleCreated = useCallback(({ gl }: { gl: THREE.WebGLRenderer }) => {
     if (!gl.getContext()) setWebglFailed(true)
   }, [])
 
-  if (webglFailed) return <CSSFallback />
+  if (webglFailed || reducedMotion || tier === 'low') return <CSSFallback />
 
   return (
     <div className="hero-scene" aria-label="An abstract orbital study object representing the MentoraX learning journey" role="img">
       <Canvas
-        dpr={mobile ? [1, 1.2] : [1, 1.8]}
+        dpr={[1, maxDpr]}
         camera={{ fov: 42, position: [0, 0, 5.4] }}
-        gl={{ alpha: true, antialias: !mobile, powerPreference: 'high-performance' }}
+        gl={{ alpha: true, antialias: tier === 'high', powerPreference: 'high-performance' }}
+        frameloop="demand"
         performance={{ min: 0.5 }}
         onCreated={handleCreated}
       >
+        <FrameLimiter fps={tier === 'high' ? 60 : 30} />
         {/* Rich layered lighting */}
         <ambientLight intensity={1.1} color="#f5f0ff" />
         <directionalLight position={[3, 6, 3]} intensity={2.0} color="#fff8ee" />

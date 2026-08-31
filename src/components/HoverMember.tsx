@@ -80,7 +80,7 @@ export function HoverMember({
   return (
     <div
       className="hover-member-root"
-      style={{ backgroundColor }}
+      style={{ '--hover-member-bg': backgroundColor } as React.CSSProperties}
     >
       {/* Avatar row */}
       <div className="hover-member-avatars">

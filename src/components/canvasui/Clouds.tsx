@@ -7,6 +7,7 @@ import {
   useSyncExternalStore,
   type ReactNode,
 } from "react";
+import { getDeviceProfile } from "../../lib/device";
 
 export interface CloudsOptions {
   scale?: number;
@@ -219,42 +220,26 @@ void main () {
   vec2 field = texture(uField, uv).rg;
   float wind = texture(uWind, uv).r * uWindAmt;
   float cov = field.r - wind;
-  float mist = smoothstep(0.04, 0.9, cov);
+  float mist = smoothstep(0.06, 0.85, cov);
   float cloudA = mist * uOpacity;
+  float sh = clamp(field.g, 0.0, 1.0);
 
   float lum = dot(uBase, vec3(0.299, 0.587, 0.114));
-  float sh = clamp(field.g, 0.0, 1.0);
-  float k = uShading * 0.35;
-  vec3 cloudRGB = lum > 0.5
-    ? uBase - vec3((1.0 - sh) * k)
-    : uBase + vec3(sh * k);
-  cloudRGB = clamp(cloudRGB, 0.0, 1.0);
+  vec3 cloudRGB;
+  if (lum > 0.5) {
+    // Light mode: soft shaded white cumulus clouds
+    cloudRGB = mix(uBase * 0.86, uBase, sh);
+  } else {
+    // Dark mode: luminous glowing violet clouds
+    cloudRGB = mix(uBase * 0.55, uBase * 1.2, sh);
+  }
 
   vec2 sUv = uv + uShadowShift;
-  float s = textureLod(uField, sUv, uShadowLod).r
-    - texture(uWind, sUv).r * uWindAmt;
-  float shadowA = smoothstep(0.35, 1.0, s) * uShadow * (1.0 - mist);
+  float s = textureLod(uField, sUv, uShadowLod).r - texture(uWind, sUv).r * uWindAmt;
+  float shadowA = smoothstep(0.25, 0.9, s) * uShadow * (1.0 - mist);
 
-  float a;
-  vec3 rgb;
-  if (uHasContent > 0.5) {
-    vec2 e = vec2(8.0) / uResolution;
-    float gx = texture(uField, uv + vec2(e.x, 0.0)).r
-      - texture(uField, uv - vec2(e.x, 0.0)).r;
-    float gy = texture(uField, uv + vec2(0.0, e.y)).r
-      - texture(uField, uv - vec2(0.0, e.y)).r;
-    vec2 rUv = uv + vec2(gx, gy) * uRefraction * mist;
-    vec3 fogged = textureLod(
-      uContent, vec2(rUv.x, 1.0 - rUv.y) * uContentScale, mist * uFogBlur * 5.0
-    ).rgb;
-    vec3 layer = mix(fogged, cloudRGB, cloudA) * (1.0 - shadowA);
-    float aF = smoothstep(0.02, 0.2, mist);
-    a = aF + shadowA * (1.0 - aF);
-    rgb = layer * aF;
-  } else {
-    a = cloudA + shadowA * (1.0 - cloudA);
-    rgb = cloudRGB * cloudA;
-  }
+  float a = clamp(cloudA + shadowA * 0.5, 0.0, 1.0);
+  vec3 rgb = cloudRGB * cloudA;
   outColor = vec4(rgb, a);
 }`;
 
@@ -275,6 +260,9 @@ export function createClouds(
 ): CloudsInstance | null {
   const config = { ...DEFAULTS, ...options };
   const { source, content, output } = elements;
+  const { maxDpr, tier } = getDeviceProfile();
+  const frameInterval = 1000 / (tier === "high" ? 45 : 30);
+  const maxFieldWidth = tier === "high" ? 1280 : 960;
 
   const gl = output.getContext("webgl2", {
     alpha: true,
@@ -410,23 +398,14 @@ export function createClouds(
       baseColor = config.color;
       return;
     }
-    if (!probeCtx) return;
-    let el: Element | null = content;
-    while (el) {
-      const bg = getComputedStyle(el).backgroundColor;
-      if (bg && bg !== "transparent") {
-        probeCtx.clearRect(0, 0, 1, 1);
-        probeCtx.fillStyle = bg;
-        probeCtx.fillRect(0, 0, 1, 1);
-        const [r, g, b, a] = probeCtx.getImageData(0, 0, 1, 1).data;
-        if (a > 0) {
-          baseColor = [r / 255, g / 255, b / 255];
-          return;
-        }
-      }
-      el = el.parentElement;
+    const isDark = typeof document !== "undefined" && document.documentElement.getAttribute("data-theme") === "dark";
+    if (isDark) {
+      // Vivid luminous violet nebula clouds in dark mode
+      baseColor = [0.65, 0.58, 0.98];
+    } else {
+      // Clean pure white clouds in light mode
+      baseColor = [1.0, 1.0, 1.0];
     }
-    baseColor = [1, 1, 1];
   }
 
   function syncCanvasSize() {
@@ -438,7 +417,7 @@ export function createClouds(
       if (output.style.width !== wpx) output.style.width = wpx;
       if (output.style.height !== hpx) output.style.height = hpx;
     }
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const dpr = Math.min(window.devicePixelRatio || 1, maxDpr);
     const width = Math.max(1, Math.round(output.clientWidth * dpr));
     const height = Math.max(1, Math.round(output.clientHeight * dpr));
     if (output.width !== width || output.height !== height) {
@@ -452,7 +431,7 @@ export function createClouds(
       ? Math.min(1, ch / Math.max(source.clientHeight, 1))
       : 1;
     const quality = Math.min(Math.max(config.quality, 0.2), 1);
-    const cap = 1440 / Math.max(output.clientWidth, 1);
+    const cap = maxFieldWidth / Math.max(output.clientWidth, 1);
     const q = Math.min(quality, cap);
     const nextW = Math.max(16, Math.round(output.clientWidth * q));
     const nextH = Math.max(16, Math.round(output.clientHeight * q));
@@ -645,6 +624,7 @@ export function createClouds(
 
   let raf = 0;
   let lastTime = performance.now();
+  let lastFrame = 0;
   let destroyed = false;
   let running = false;
   let visible = true;
@@ -658,6 +638,11 @@ export function createClouds(
       running = false;
       return;
     }
+    if (now - lastFrame < frameInterval) {
+      raf = requestAnimationFrame(frame);
+      return;
+    }
+    lastFrame = now;
     const delta = Math.min((now - lastTime) / 1000, 1 / 30);
     lastTime = now;
     if (!reducedMotion) time += delta * config.speed * 0.03;
@@ -674,6 +659,7 @@ export function createClouds(
     if (destroyed || running || !visible) return;
     running = true;
     lastTime = performance.now();
+    lastFrame = 0;
     raf = requestAnimationFrame(frame);
   }
 
@@ -811,6 +797,7 @@ export function Clouds({
   const instanceRef = useRef<CloudsInstance | null>(null);
   const [initialOptions] = useState(options);
   const [failed, setFailed] = useState(false);
+  const [nearViewport, setNearViewport] = useState(false);
 
   const supported = useSyncExternalStore(
     emptySubscribe,
@@ -820,6 +807,26 @@ export function Clouds({
   const native = supported && !failed;
 
   useEffect(() => {
+    const output = outputRef.current;
+    if (!output) return;
+    if (!("IntersectionObserver" in window)) {
+      setNearViewport(true);
+      return;
+    }
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return;
+        setNearViewport(true);
+        observer.disconnect();
+      },
+      { rootMargin: "320px" },
+    );
+    observer.observe(output);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!nearViewport) return;
     const source = sourceRef.current;
     const content = contentRef.current;
     const output = outputRef.current;
@@ -833,7 +840,7 @@ export function Clouds({
       instanceRef.current?.destroy();
       instanceRef.current = null;
     };
-  }, [initialOptions, native]);
+  }, [initialOptions, native, nearViewport]);
 
   useEffect(() => {
     instanceRef.current?.setOptions(options);
@@ -841,44 +848,6 @@ export function Clouds({
 
   return (
     <div className={className} style={{ position: "relative", ...style }}>
-      <canvas
-        ref={sourceRef}
-        // @ts-expect-error experimental html-in-canvas attribute
-        layoutsubtree="true"
-        suppressHydrationWarning
-        style={
-          native
-            ? { position: "absolute", inset: 0, width: "100%", height: "100%" }
-            : { display: "none" }
-        }
-      >
-        {native ? (
-          <div
-            ref={contentRef}
-            style={{
-              position: "relative",
-              width: "100%",
-              height: "100%",
-              overflow: "hidden",
-            }}
-          >
-            {children}
-          </div>
-        ) : null}
-      </canvas>
-      {!native ? (
-        <div
-          ref={contentRef}
-          style={{
-            position: "relative",
-            width: "100%",
-            height: "100%",
-            overflow: "hidden",
-          }}
-        >
-          {children}
-        </div>
-      ) : null}
       <canvas
         ref={outputRef}
         aria-hidden
@@ -888,8 +857,21 @@ export function Clouds({
           width: "100%",
           height: "100%",
           pointerEvents: "none",
+          zIndex: 1,
         }}
       />
+      <div
+        ref={contentRef}
+        style={{
+          position: "relative",
+          width: "100%",
+          height: "100%",
+          zIndex: 2,
+        }}
+      >
+        {children}
+      </div>
+      <canvas ref={sourceRef} style={{ display: "none" }} />
     </div>
   );
 }
