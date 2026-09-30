@@ -4233,6 +4233,15 @@ html[data-anim-fallback='static'] .pop-word { will-change: auto; }
   opacity: 0.45;
 }
 
+.comp-strike-inline {
+  text-decoration: line-through;
+  opacity: 0.45;
+  font-size: 0.8em;
+  margin-right: 6px;
+  font-weight: 500;
+  color: var(--ink-soft);
+}
+
 .comp-final-row {
   background: rgba(216, 255, 106, 0.04) !important;
 }

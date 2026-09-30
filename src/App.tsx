@@ -778,8 +778,7 @@ function Mentorship() {
     { feature: 'Regular Support (Calls, Text & GMeet)', catalyst: false, quantum: true, genesis: true },
     { feature: 'Dedicated 1-on-1 Personal Mentor', catalyst: false, quantum: true, genesis: true },
     { feature: 'Physical PYQ Solution Book Shipped', catalyst: false, quantum: true, genesis: true },
-    { feature: 'Strikethrough Price', catalyst: '₹3,000', quantum: '₹10,000', genesis: '₹20,000', isText: true, isStrikethrough: true },
-    { feature: 'Final Discounted Fee (50% OFF)', catalyst: '₹1,500', quantum: '₹5,000', genesis: '₹10,000', isText: true, isFinal: true },
+    { feature: 'Price (50% OFF)', catalyst: <><span className="comp-strike-inline">₹3,000</span> ₹1,500</>, quantum: <><span className="comp-strike-inline">₹10,000</span> ₹5,000</>, genesis: <><span className="comp-strike-inline">₹20,000</span> ₹10,000</>, isReactNode: true, isFinal: true },
   ]
 
   return <><PageIntro index="01" eyebrow="The MentoraX mentorship" title="A better way to be" italic="serious." copy="Pure mentorship — strategy, pacing, guidance, and structure. No problem-solving teaching lectures. Google Meet interactive sessions apply across all 3 tiers." side="For students who care deeply about what comes next." />
@@ -830,7 +829,9 @@ function Mentorship() {
               {(['catalyst', 'quantum', 'genesis'] as const).map(tier => {
                 const val = row[tier]
                 return <td key={tier} className="comp-cell">
-                  {row.isText ? (
+                  {row.isReactNode ? (
+                    <span className={`comp-text-val ${row.isFinal ? 'comp-final-price' : ''}`}>{val as React.ReactNode}</span>
+                  ) : row.isText ? (
                     <span className={`comp-text-val ${row.isStrikethrough ? 'comp-strike' : ''} ${row.isFinal ? 'comp-final-price' : ''}`}>{val as string}</span>
                   ) : val === true ? (
                     <span className="comp-check"><Check size={16} /></span>
