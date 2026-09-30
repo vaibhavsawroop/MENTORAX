@@ -27,7 +27,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const apiKey = process.env.RESEND_API_KEY
-    const adminEmail = process.env.ADMIN_EMAIL || 'vaibhavsawroop@gmail.com'
+    const adminEmail = process.env.ADMIN_EMAIL || 'managementrajiiserit@gmail.com'
     const fromEmail = process.env.FROM_EMAIL || 'MentoraX <enquiries@mentorax.in>'
 
     if (apiKey) {
@@ -104,7 +104,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   } catch (err: unknown) {
     console.error('Contact API Error:', err)
     return res.status(500).json({
-      error: 'Failed to process enquiry. Please write directly to vaibhavsawroop@gmail.com or support@mentorax.in',
+      error: 'Failed to process enquiry. Please write directly to managementrajiiserit@gmail.com or support@mentorax.in',
     })
   }
 }

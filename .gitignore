@@ -6,6 +6,10 @@ dist/
 dist-ssr/
 *.local
 
+# Secrets
+.env
+.env.local
+
 # Logs
 *.log
 npm-debug.log*
@@ -14,3 +18,8 @@ npm-debug.log*
 .DS_Store
 .idea/
 .vscode/
+
+# Environment secrets
+.env
+.env.local
+.env.production

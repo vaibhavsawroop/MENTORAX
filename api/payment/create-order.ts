@@ -1,6 +1,19 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import Razorpay from 'razorpay'
 
+/**
+ * Server-side product catalog — the ONLY source of truth for prices.
+ * Clients cannot override these. Prevents price-tampering attacks.
+ */
+const SERVER_PRODUCTS: Record<string, { name: string; priceINR: number; type: 'book' | 'batch' }> = {
+  'iat-pyq-book':   { name: "IAT PYQ's Solution Book (Paperback)", priceINR: 499,   type: 'book' },
+  'nest-pyq-book':  { name: "NEST PYQ's Solution Book (Paperback)", priceINR: 499,  type: 'book' },
+  'all-pyq-combo':  { name: 'IAT + NEST Mega Book Combo (Paperback)', priceINR: 799, type: 'book' },
+  'genesis':        { name: 'MentoraX Genesis — Class 11 Foundation (2 Years)', priceINR: 10000, type: 'batch' },
+  'quantum':        { name: 'MentoraX Quantum — Class 12 + Droppers (1 Year)', priceINR: 5000,  type: 'batch' },
+  'catalyst':       { name: 'MentoraX Catalyst — Class 12 + Droppers',          priceINR: 1500,  type: 'batch' },
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Credentials', 'true')
   res.setHeader('Access-Control-Allow-Origin', '*')
@@ -19,10 +32,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const { amount, productId, productName, studentEmail, studentName } = req.body || {}
+    const { productId, studentEmail, studentName, shippingAddress } = req.body || {}
 
-    if (!amount || !productId) {
-      return res.status(400).json({ error: 'Amount and Product ID are required.' })
+    // Validate required fields
+    if (!productId) {
+      return res.status(400).json({ error: 'Product ID is required.' })
+    }
+
+    // Look up the product server-side — prevents price tampering
+    const product = SERVER_PRODUCTS[productId]
+    if (!product) {
+      return res.status(400).json({ error: 'Invalid product ID.' })
+    }
+
+    // For book orders, require a shipping address
+    if (product.type === 'book') {
+      if (!shippingAddress || !shippingAddress.street || !shippingAddress.city || !shippingAddress.state || !shippingAddress.pincode) {
+        return res.status(400).json({ error: 'Complete shipping address is required for book orders.' })
+      }
     }
 
     const keyId = process.env.RAZORPAY_KEY_ID
@@ -36,14 +63,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       })
 
       const options = {
-        amount: Math.round(Number(amount) * 100), // in paise
+        amount: Math.round(product.priceINR * 100), // in paise — from server catalog, NOT client
         currency: 'INR',
         receipt: `mtx_rcpt_${Date.now().toString().slice(-8)}`,
         notes: {
           productId,
-          productName: productName || 'MentoraX Product',
+          productName: product.name,
+          productType: product.type,
           studentEmail: studentEmail || '',
           studentName: studentName || '',
+          ...(product.type === 'book' && shippingAddress ? {
+            shippingStreet: shippingAddress.street,
+            shippingCity: shippingAddress.city,
+            shippingState: shippingAddress.state,
+            shippingPincode: shippingAddress.pincode,
+          } : {}),
         },
       }
 
@@ -54,6 +88,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         amount: order.amount,
         currency: order.currency,
         keyId,
+        productType: product.type,
       })
     }
 
@@ -62,9 +97,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(200).json({
       success: true,
       orderId: mockOrderId,
-      amount: Math.round(Number(amount) * 100),
+      amount: Math.round(product.priceINR * 100),
       currency: 'INR',
       keyId: 'rzp_test_mock_keys_pending',
+      productType: product.type,
       mock: true,
       message: 'Razorpay keys pending. Running in interactive test simulation mode.',
     })

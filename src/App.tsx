@@ -47,9 +47,9 @@ const CheckoutPage = lazy(() => import('./components/Checkout').then((m) => ({ d
 const Clouds = lazy(() => import('./components/canvasui/Clouds').then((m) => ({ default: m.Clouds })))
 
 const plans = [
-  { name: 'Foundation', index: '01', price: '₹1,099', note: 'A clean beginning for serious self-starters.', features: ['A complete study architecture', 'Core resource & revision map', 'Member updates and group sessions'], accent: 'lilac' },
-  { name: 'Momentum', index: '02', price: '₹4,099', note: 'The considered, high-touch MentoraX experience.', features: ['Everything in Foundation', 'Personal planning conversations', 'Regular check-ins and recalibration', 'Practice & exam strategy feedback'], accent: 'lime', featured: true },
-  { name: 'Intensive', index: '03', price: '₹2,099', note: 'A precise final stretch for high-stakes preparation.', features: ['Everything in Momentum', 'More focused strategy sessions', 'Exam-window support', 'Priority guidance'], accent: 'peach' },
+  { name: 'Catalyst', index: '01', price: '₹1,500', originalPrice: '₹3,000', note: 'IAT 2027 · Class 12 + Droppers · Build Momentum, Crack IAT.', cohort: 'Class 12 & Droppers', duration: '1 Year', features: ['Guidance from 4 dedicated mentors (PCMB)', 'Interactive cohort Google Meet guidance sessions', 'Curated Daily Practice Problems (DPPs)', 'Complete IAT PYQ Solutions', 'Progress Tracking & Strategy Guidance', 'Personalised Study Plan & Doubt Support (WhatsApp)'], accent: 'lilac', productId: 'catalyst', banner: '/batches/catalyst.jpg' },
+  { name: 'Quantum', index: '02', price: '₹5,000', originalPrice: '₹10,000', note: 'IAT 2027 · Class 12 + Droppers · Intensive Personalised 1-on-1 Guidance.', cohort: 'Class 12 & Droppers', duration: '1 Year (365 days)', features: ['Dedicated 1-on-1 personal mentor for 1 full year', 'Daily Targets via Email — planned schedules to your inbox', 'Structured Day Architecture — daily study plan & milestones', 'Continuous Support — calls, DMs & 1-on-1 Google Meet', 'Physical IAT MentoraX PYQ Book shipped to doorstep', 'All Core Resources — DPPs, IAT PYQs, 4-subject guidance'], accent: 'lime', featured: true, productId: 'quantum', banner: '/batches/quantum.jpg' },
+  { name: 'Genesis', index: '03', price: '₹10,000', originalPrice: '₹20,000', note: 'IAT 2027 · Class 11 Foundation · 2-Year Long-Term Scientist Pathway.', cohort: 'Class 11 Foundation', duration: '2 Years (Class 11 + 12)', features: ['1-on-1 Personalised Mentorship with dedicated mentor', 'Planned Day Structure & Email Targets daily', 'Comprehensive Foundation Planning & milestone tracking', 'Regular Google Meet sessions with all 4 mentors', 'Continuous Support — calls, DMs & personalised check-ins', 'Physical IAT MentoraX PYQ Book shipped to doorstep'], accent: 'peach', productId: 'genesis', banner: '/batches/genesis.jpg' },
 ]
 
 const materials = [
@@ -71,10 +71,10 @@ type MentorCard = {
 }
 
 const mentors: MentorCard[] = [
-  { initials: 'R', name: 'Raj', role: 'Maths Mentor', detail: 'IISER TVM · Mentored 2,000+ students with personalised study roadmaps, weekly reviews, and accountability.', tone: 'violet', portrait: '/mentors/raj.png', portraitAlt: 'Raj, MentoraX Maths Mentor', subjects: ['IAT Maths', 'NEST Maths', 'Roadmaps & reviews'] },
-  { initials: 'B', name: 'Bhavesha', role: 'Physics Mentor', detail: 'M.Sc. Physics student at IISER Thiruvananthapuram · B.Sc. (Hons.) Physics from Gargi College, University of Delhi. Qualified IIT JAM 2025 with Rank 2000 and researches astrophysics, solar magnetic fields, and low-frequency radio observations.', tone: 'sage', portrait: '/mentors/bhavesha.png', portraitAlt: 'Bhavesha, MentoraX Physics Mentor', subjects: ['Mechanics', 'Electromagnetism', 'Modern Physics'] },
-  { initials: 'AT', name: 'Aditya Thakur', role: 'Chemistry Mentor', detail: 'BS Chemistry, IIT Madras · IAT 2026 AIR 544. PCM mentor with a major focus on Chemistry.', tone: 'coral', portrait: '/mentors/aditya-thakur.png', portraitAlt: 'Aditya Thakur, MentoraX Chemistry Mentor', subjects: ['Physical', 'Organic', 'Inorganic'] },
-  { initials: 'SB', name: 'Sparsh Bansal', role: 'Biology Mentor', detail: 'IISER TVM undergraduate · PCB mentor focused on Biology, IAT & NEST preparation, and clear concept support.', tone: 'ink', subjects: ['IAT Biology', 'NEST Biology', 'Concept support'] },
+  { initials: 'R', name: 'Raj', role: 'Mathematics Mentor', detail: 'IISER TVM · Mentored 2,200+ students across India with precision guidance on strategy, schedule optimization, and conceptual clarity.', tone: 'violet', portrait: '/mentors/raj.png', portraitAlt: 'Raj, MentoraX Mathematics Mentor', subjects: ['IAT Maths', 'Strategy', 'Schedule optimization'] },
+  { initials: 'B', name: 'Bhavesa', role: 'Physics Mentor', detail: 'IISER TVM · Currently leading research projects at ISRO. Core guidance on exam methodology and physics orientation.', tone: 'sage', portrait: '/mentors/bhavesha.png', portraitAlt: 'Bhavesa, MentoraX Physics Mentor', subjects: ['Exam methodology', 'Physics orientation', 'ISRO research'] },
+  { initials: 'AT', name: 'Aditya', role: 'Chemistry Mentor', detail: 'IIT Madras · AIR 544 in IAT 2026. Structured preparation blueprints for Physical, Organic, and Inorganic Chemistry.', tone: 'coral', portrait: '/mentors/aditya-thakur.png', portraitAlt: 'Aditya, MentoraX Chemistry Mentor', subjects: ['Physical', 'Organic', 'Inorganic'] },
+  { initials: 'SB', name: 'Sparsh', role: 'Biology Mentor', detail: 'IISER Tirupati · Targeted NCERT retention tactics and high-efficiency revision roadmaps for Biology.', tone: 'ink', subjects: ['NCERT Biology', 'Retention tactics', 'Revision roadmaps'] },
 ]
 
 const team = [
@@ -588,9 +588,9 @@ function Home() {
             animate={{ opacity: 1 }}
             transition={{ duration: .7, delay: .52 }}
           >
-            <span className="tier-pill tier-foundation">Foundation</span>
-            <span className="tier-pill tier-momentum">Momentum</span>
-            <span className="tier-pill tier-intensive">Intensive</span>
+            <span className="tier-pill tier-foundation">Catalyst</span>
+            <span className="tier-pill tier-momentum">Quantum</span>
+            <span className="tier-pill tier-intensive">Genesis</span>
           </motion.div>
         </div>
 
@@ -651,7 +651,7 @@ function Home() {
 
     <section className="founders-section section-pad"><div className="founder-portrait-panel" data-drift="6"><div className="founder-orbit"><span>MentoraX</span><i>✦</i><span>MentoraX</span><i>✦</i><span>MentoraX</span></div><div className="founder-initials">R <i>+</i> D</div><span className="rd-pun-label">Research &amp; Development</span><p>Managed personally by<br /><b>Raj &amp; Dipti</b></p></div><div className="founder-copy"><AnimateIn><Eyebrow>R+D — the real kind</Eyebrow><TextPop as="h2" mode="popup">Warmth is not the opposite of <em>rigour.</em></TextPop><p className="body-large">R+D at MentoraX means two things at once: Raj &amp; Dipti, and the Research &amp; Development mindset that IISER, IAT, and NEST are built on. We believe the best exam prep is also the best science education.</p><div className="founder-quote"><Quote size={21} /><p>"The aim is not to make a student busier. It's to help them become more certain."</p></div><ArrowLink to="/team">Meet the MentoraX team</ArrowLink></AnimateIn></div></section>
 
-    <section className="program-preview section-pad"><AnimateIn><div className="section-head"><div><Eyebrow>Find your level of support</Eyebrow><TextPop as="h2" mode="bounce">Designed for a very real <em>journey.</em></TextPop></div><ArrowLink to="/mentorship">View the program</ArrowLink></div></AnimateIn><div className="plan-strip" data-skew="">{plans.map((plan, index) => <AnimateIn key={plan.name} delay={index * .06}>{plan.name !== 'Momentum' && planCloudsEnabled ? <Suspense fallback={<Tilt className="plan-card"><PlanCardContent plan={plan} /></Tilt>}><Clouds className="plan-clouds" scale={1.1} speed={0.38} cover={0.2} density={1.75} shading={0.3} opacity={0.65} shadow={0.1} wind={0.5} windRadius={200} quality={0.75}><Tilt className="plan-card"><PlanCardContent plan={plan} /></Tilt></Clouds></Suspense> : <Tilt className={`plan-card ${plan.featured ? 'plan-card-featured' : ''}`}><PlanCardContent plan={plan} /></Tilt>}</AnimateIn>)}</div></section>
+    <section className="program-preview section-pad"><AnimateIn><div className="section-head"><div><Eyebrow>Find your level of support</Eyebrow><TextPop as="h2" mode="bounce">Designed for a very real <em>journey.</em></TextPop></div><ArrowLink to="/mentorship">View the program</ArrowLink></div></AnimateIn><div className="plan-strip" data-skew="">{plans.map((plan, index) => <AnimateIn key={plan.name} delay={index * .06}>{plan.name !== 'Quantum' && planCloudsEnabled ? <Suspense fallback={<Tilt className="plan-card"><PlanCardContent plan={plan} /></Tilt>}><Clouds className="plan-clouds" scale={1.1} speed={0.38} cover={0.2} density={1.75} shading={0.3} opacity={0.65} shadow={0.1} wind={0.5} windRadius={200} quality={0.75}><Tilt className="plan-card"><PlanCardContent plan={plan} /></Tilt></Clouds></Suspense> : <Tilt className={`plan-card ${plan.featured ? 'plan-card-featured' : ''}`}><PlanCardContent plan={plan} /></Tilt>}</AnimateIn>)}</div></section>
 
     <section className="book-banner">
       <div>
@@ -765,7 +765,89 @@ function ProductLoopSection() {
   )
 }
 
-function Mentorship() { return <><PageIntro index="01" eyebrow="The MentoraX mentorship" title="A better way to be" italic="serious." copy="Structure when you need it. Space when you need to think. The program is made to support the whole arc of IAT and NEST preparation." side="For students who care deeply about what comes next." /><section className="section-pad program-design"><div className="section-head"><div><Eyebrow>The programme in practice</Eyebrow><h2>One system, <em>four dimensions.</em></h2></div></div><div className="dimension-grid" data-skew=""><Dimension number="01" title="Direction" copy="A preparation map with a particular answer to the question: what should I do next?" /><Dimension number="02" title="Dialogue" copy="Mentoring conversations that turn uncertainty into a sensible decision." /><Dimension number="03" title="Deliberate practice" copy="Material and problem-solving built around learning, not just finishing." /><Dimension number="04" title="Reflection" copy="Regular recalibration so your plan grows with your understanding." /></div></section><section className="pricing-area section-pad"><div className="section-head"><div><Eyebrow>Programme editions</Eyebrow><h2>Pick the pressure you <em>need.</em></h2></div><p>Three focused tiers — each designed to match where you are in your preparation journey.</p></div><div className="pricing-cards">{plans.map((plan, index) => <AnimateIn key={plan.name} delay={index * .06}><article className={`edition-card ${plan.featured ? 'edition-card-primary' : ''}`}><span className="edition-index">{plan.index}</span>{plan.featured && <span className="edition-label">Most complete</span>}<h3>{plan.name}</h3><div className="price-tba">{'price' in plan ? <><span>{plan.price}</span></> : <>₹ <span>TBA</span></>}</div><p>{plan.note}</p><ul>{plan.features.map((feature) => <li key={feature}><Check size={15} />{feature}</li>)}</ul><ArrowLink solid={!!plan.featured} to="/contact">Enquire about {plan.name}</ArrowLink></article></AnimateIn>)}</div></section><section className="material-section section-pad"><div><Eyebrow>The material desk</Eyebrow><h2>Useful things.<br /><em>In the right order.</em></h2></div><div className="material-list" data-skew="">{materials.map(([number, title, copy]) => <article key={number} className="material-row" data-reveal="left"><span>{number}</span><div><h3>{title}</h3><p>{copy}</p></div><a href="#materials" aria-label={`${title} link coming soon`}>Source files <ArrowUpRight size={17} /></a></article>)}</div></section><section className="section-pad"><div className="cta-panel" data-reveal="scale"><Sparkles /><div><span className="tiny-kicker">The first step</span><h2>Tell us a little<br />about your <em>ambition.</em></h2></div><ArrowLink solid to="/contact">Start your enquiry</ArrowLink></div></section></> }
+function Mentorship() {
+  const comparisonRows = [
+    { feature: 'Target Cohort', catalyst: 'Class 12 / Droppers', quantum: 'Class 12 / Droppers', genesis: 'Class 11 Foundation', isText: true },
+    { feature: 'Program Duration', catalyst: '1 Year', quantum: '1 Year', genesis: '2 Years', isText: true },
+    { feature: 'Guidance by 4 Dedicated Mentors', catalyst: true, quantum: true, genesis: true },
+    { feature: 'Daily Practice Problems (DPPs)', catalyst: true, quantum: true, genesis: true },
+    { feature: 'Complete IAT PYQ Solutions', catalyst: true, quantum: true, genesis: true },
+    { feature: 'Google Meet Guidance Sessions', catalyst: true, quantum: true, genesis: true },
+    { feature: 'Problem-Solving Teaching Lectures', catalyst: false, quantum: false, genesis: false, note: 'Pure Mentorship' },
+    { feature: 'Email Daily Targets & Day Structure', catalyst: false, quantum: true, genesis: true },
+    { feature: 'Regular Support (Calls, Text & GMeet)', catalyst: false, quantum: true, genesis: true },
+    { feature: 'Dedicated 1-on-1 Personal Mentor', catalyst: false, quantum: true, genesis: true },
+    { feature: 'Physical PYQ Solution Book Shipped', catalyst: false, quantum: true, genesis: true },
+    { feature: 'Strikethrough Price', catalyst: '₹3,000', quantum: '₹10,000', genesis: '₹20,000', isText: true, isStrikethrough: true },
+    { feature: 'Final Discounted Fee (50% OFF)', catalyst: '₹1,500', quantum: '₹5,000', genesis: '₹10,000', isText: true, isFinal: true },
+  ]
+
+  return <><PageIntro index="01" eyebrow="The MentoraX mentorship" title="A better way to be" italic="serious." copy="Pure mentorship — strategy, pacing, guidance, and structure. No problem-solving teaching lectures. Google Meet interactive sessions apply across all 3 tiers." side="For students who care deeply about what comes next." />
+
+  {/* ─── BATCH POSTER BANNERS ─── */}
+  <section className="batch-banners section-pad">
+    <AnimateIn><div className="section-head"><div><Eyebrow>IAT 2027 Mentorship Programs</Eyebrow><h2>Same Mentors. Same Vision. <em>Bigger You.</em></h2></div></div></AnimateIn>
+    <div className="batch-banner-grid">
+      {plans.map((plan, i) => <AnimateIn key={plan.name} delay={i * .08}>
+        <Link to={`/checkout?product=${'productId' in plan ? plan.productId : 'catalyst'}`} className={`batch-banner-card batch-banner-${plan.accent}`}>
+          {'banner' in plan && <img src={plan.banner as string} alt={`${plan.name} batch poster`} className="batch-banner-img" loading="lazy" />}
+          <div className="batch-banner-overlay">
+            <span className="batch-banner-tag">50% OFF</span>
+            <h3>{plan.name}</h3>
+            <div className="batch-banner-price">
+              <span className="batch-price-strike">{plan.originalPrice}</span>
+              <strong>{plan.price}</strong>
+            </div>
+            <span className="batch-banner-cohort">{'cohort' in plan ? (plan.cohort as string) : ''} · {'duration' in plan ? (plan.duration as string) : ''}</span>
+          </div>
+        </Link>
+      </AnimateIn>)}
+    </div>
+  </section>
+
+  <section className="section-pad program-design"><div className="section-head"><div><Eyebrow>The programme in practice</Eyebrow><h2>One system, <em>four dimensions.</em></h2></div></div><div className="dimension-grid" data-skew=""><Dimension number="01" title="Direction" copy="A preparation map with a particular answer to the question: what should I do next?" /><Dimension number="02" title="Dialogue" copy="Mentoring conversations that turn uncertainty into a sensible decision." /><Dimension number="03" title="Deliberate practice" copy="DPPs and revision sets built around learning, not just finishing." /><Dimension number="04" title="Reflection" copy="Regular recalibration so your plan grows with your understanding." /></div></section>
+
+  <section className="pricing-area section-pad"><div className="section-head"><div><Eyebrow>Programme editions</Eyebrow><h2>Pick the pressure you <em>need.</em></h2></div><p>Three focused tiers — each designed to match where you are in your preparation journey.</p></div><div className="pricing-cards">{plans.map((plan, index) => <AnimateIn key={plan.name} delay={index * .06}><article className={`edition-card ${plan.featured ? 'edition-card-primary' : ''}`}><span className="edition-index">{plan.index}</span>{plan.featured && <span className="edition-label">Most Popular</span>}<h3>{plan.name}</h3><div className="price-tba"><span>{plan.price}</span><span style={{ textDecoration: 'line-through', opacity: 0.5, fontSize: '0.65em', marginLeft: '8px' }}>{plan.originalPrice}</span></div><p>{plan.note}</p><ul>{plan.features.map((feature) => <li key={feature}><Check size={15} />{feature}</li>)}</ul><ArrowLink solid={!!plan.featured} to={`/checkout?product=${'productId' in plan ? plan.productId : 'catalyst'}`}>Enroll in {plan.name}</ArrowLink></article></AnimateIn>)}</div></section>
+
+  {/* ─── COMPARISON GRID ─── */}
+  <section className="comparison-section section-pad">
+    <AnimateIn><div className="section-head"><div><Eyebrow>Program Comparison</Eyebrow><h2>What's included in <em>each tier.</em></h2></div></div></AnimateIn>
+    <AnimateIn delay={.1}>
+    <div className="comparison-table-wrap">
+      <table className="comparison-table">
+        <thead>
+          <tr>
+            <th className="comp-feature-col">Features / Deliverables</th>
+            <th className="comp-tier-col comp-catalyst"><span>Catalyst</span><em>₹1,500</em></th>
+            <th className="comp-tier-col comp-quantum"><span>Quantum</span><em>₹5,000</em></th>
+            <th className="comp-tier-col comp-genesis"><span>Genesis</span><em>₹10,000</em></th>
+          </tr>
+        </thead>
+        <tbody>
+          {comparisonRows.map((row, idx) => (
+            <tr key={idx} className={row.isFinal ? 'comp-final-row' : ''}>
+              <td className="comp-feature-name">{row.feature}</td>
+              {(['catalyst', 'quantum', 'genesis'] as const).map(tier => {
+                const val = row[tier]
+                return <td key={tier} className="comp-cell">
+                  {row.isText ? (
+                    <span className={`comp-text-val ${row.isStrikethrough ? 'comp-strike' : ''} ${row.isFinal ? 'comp-final-price' : ''}`}>{val as string}</span>
+                  ) : val === true ? (
+                    <span className="comp-check"><Check size={16} /></span>
+                  ) : (
+                    <span className="comp-cross">{row.note ? <span className="comp-note">{row.note}</span> : <Minus size={16} />}</span>
+                  )}
+                </td>
+              })}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    </AnimateIn>
+  </section>
+
+  <section className="section-pad"><div className="cta-panel" data-reveal="scale"><Sparkles /><div><span className="tiny-kicker">The first step</span><h2>Tell us a little<br />about your <em>ambition.</em></h2></div><ArrowLink solid to="/contact">Start your enquiry</ArrowLink></div></section></> }
 function Dimension({ number, title, copy }: { number: string; title: string; copy: string }) { return <article className="dimension" data-reveal="up"><span>{number}</span><h3>{title}</h3><p>{copy}</p></article> }
 
 function BooksHero() {
@@ -785,7 +867,7 @@ function BooksHero() {
           </motion.p>
           <motion.div className="books-hero-actions" initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .65, delay: .24 }}>
             <Link className="arrow-link solid" to="/checkout?product=iat-pyq-book">Buy the book · ₹499 <ArrowUpRight size={17} /></Link>
-            <span className="books-hero-note">One-time purchase<br />Instant access · Lifetime availability</span>
+            <span className="books-hero-note">Physical Paperback<br />Free shipping · Delivered to your door</span>
           </motion.div>
           <motion.div className="books-subjects" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: .7, delay: .4 }}>
             <span>Physics</span><span>Chemistry</span><span>Mathematics</span><span>Biology</span>
@@ -810,14 +892,14 @@ function BooksHero() {
           </motion.div>
         </div>
       </div>
-      <div className="books-hero-footer"><span>2017–2024 PYQs</span><i /><span>4 subjects</span><i /><span>Detailed solutions</span><i /><span>₹499 one-time</span></div>
+      <div className="books-hero-footer"><span>2017–2024 PYQs</span><i /><span>4 subjects</span><i /><span>Physical paperback</span><i /><span>₹499 · Free delivery</span></div>
     </section>
   )
 }
 
 function Books() { return <><BooksHero /><section className="book-showcase section-pad"><BookProduct type="IAT" subtitle="IAT PYQ's Solution · 2017–2024" description="Practice real IAT questions, understand the concepts behind them, and learn how the exam actually asks questions." tone="plum" productId="iat-pyq-book" /><BookProduct type="NEST" subtitle="NEST PYQ's Solution · 2017–2024" description="A focused NEST edition for practising authentic questions, understanding recurring concepts, and revising with confidence." tone="teal" productId="nest-pyq-book" /></section><section className="library-note" data-reveal="up"><BookOpen /><div><Eyebrow>What makes it different?</Eyebrow><h2>Question → Concept → Approach → Solution.</h2><p>Instead of simply telling you the answer, the book helps you understand how to arrive at it. That makes PYQ practice more useful, more deliberate, and easier to revise.</p></div></section><section className="section-pad"><div className="cta-panel dark-cta" data-reveal="scale"><div><span className="tiny-kicker">Mega Bundle · Save ₹199</span><h2>Master both IAT &amp; NEST in one <em>bundle.</em></h2></div><Link className="arrow-link solid" to="/checkout?product=all-pyq-combo">Get 2-in-1 Combo · ₹799 <ArrowUpRight size={17} /></Link></div></section></> }
-function BookProduct({ type, subtitle, description, tone, productId = 'iat-pyq-book' }: { type: string; subtitle: string; description: string; tone: string; productId?: string }) { return <AnimateIn><article className={`book-product ${tone}`}><div className="book-object"><div className="book-cover"><span>IAT Mentorax<br />book 01</span><strong>{type}</strong><i>{subtitle}</i><b>2017–24</b></div><div className="book-pages" /></div><div className="book-product-copy"><span className="tiny-kicker">{subtitle}</span><h2>{type} <em>edition.</em></h2><p>{description}</p><div className="product-meta"><span>Price <b>₹499</b></span><span>Format <b>Digital book</b></span><span>Access <b>Instant · lifetime</b></span></div><Link className="arrow-link solid" to={`/checkout?product=${productId}`}>Get the book · ₹499 <ArrowUpRight size={17} /></Link></div></article></AnimateIn> }
-function PlanCardContent({ plan }: { plan: (typeof plans)[number] }) { return <><div className="plan-top"><span>{plan.index}</span>{plan.featured && <span className="plan-badge">The MentoraX edit</span>}</div><h3>{plan.name}</h3>{'price' in plan && <div className="price-tba"><span>{plan.price}</span></div>}<p>{plan.note}</p><ul>{plan.features.slice(0, 3).map((feature) => <li key={feature}><Check size={14} />{feature}</li>)}</ul><Link to="/contact" className="plan-link">Enquire <ArrowRight size={16} /></Link></> }
+function BookProduct({ type, subtitle, description, tone, productId = 'iat-pyq-book' }: { type: string; subtitle: string; description: string; tone: string; productId?: string }) { return <AnimateIn><article className={`book-product ${tone}`}><div className="book-object"><div className="book-cover"><span>IAT Mentorax<br />book 01</span><strong>{type}</strong><i>{subtitle}</i><b>2017–24</b></div><div className="book-pages" /></div><div className="book-product-copy"><span className="tiny-kicker">{subtitle}</span><h2>{type} <em>edition.</em></h2><p>{description}</p><div className="product-meta"><span>Price <b>₹499</b></span><span>Format <b>Paperback</b></span><span>Delivery <b>Free · All India</b></span></div><Link className="arrow-link solid" to={`/checkout?product=${productId}`}>Order the book · ₹499 <ArrowUpRight size={17} /></Link></div></article></AnimateIn> }
+function PlanCardContent({ plan }: { plan: (typeof plans)[number] }) { return <><div className="plan-top"><span>{plan.index}</span>{plan.featured && <span className="plan-badge">Most Popular</span>}</div><h3>{plan.name}</h3>{'price' in plan && <div className="price-tba"><span>{plan.price}</span>{'originalPrice' in plan && <span style={{ textDecoration: 'line-through', opacity: 0.5, fontSize: '0.7em', marginLeft: '8px' }}>{plan.originalPrice}</span>}</div>}<p>{plan.note}</p><ul>{plan.features.slice(0, 3).map((feature) => <li key={feature}><Check size={14} />{feature}</li>)}</ul><Link to={`/checkout?product=${'productId' in plan ? plan.productId : 'catalyst'}`} className="plan-link">Enroll Now <ArrowRight size={16} /></Link></> }
 
 function MentorProfileCard({ person, index }: { person: MentorCard; index: number }) {
   return <AnimateIn key={person.name} delay={index * .05}><article className={`mentor-card ${person.tone}`}><div className="mentor-portrait-wrap">{person.portrait ? <Suspense fallback={<div className="mentor-portrait mentor-halftone"><img className="halftone-fallback" src={person.portrait} alt="" /></div>}><HalftoneReveal className="mentor-portrait mentor-halftone" src={person.portrait} alt={person.portraitAlt ?? `${person.name}, MentoraX mentor`} inkColor={person.tone === 'sage' ? '#27463c' : '#2b214d'} paperColor={person.tone === 'sage' ? '#e8f1df' : '#eee8ff'} /></Suspense> : <div className="mentor-portrait"><span>{person.initials}</span><i>MentoraX</i><div className="portrait-badge">Profile image<br />coming soon</div></div>}</div><div className="mentor-info"><div className="mentor-info-top"><span className="tiny-kicker">{person.role}</span><h2>{person.name}</h2><p>{person.detail}</p></div><div className="mentor-info-bottom"><div className="mentor-chips">{person.subjects.map(subject => <span key={subject}>{subject}</span>)}</div><Link className="mentor-cta" to="/contact">Book a conversation <ArrowRight size={14} /></Link></div></div></article></AnimateIn>
