@@ -832,7 +832,7 @@ function Mentorship() {
                   {row.isReactNode ? (
                     <span className={`comp-text-val ${row.isFinal ? 'comp-final-price' : ''}`}>{val as React.ReactNode}</span>
                   ) : row.isText ? (
-                    <span className={`comp-text-val ${row.isStrikethrough ? 'comp-strike' : ''} ${row.isFinal ? 'comp-final-price' : ''}`}>{val as string}</span>
+                    <span className={`comp-text-val ${row.isFinal ? 'comp-final-price' : ''}`}>{val as string}</span>
                   ) : val === true ? (
                     <span className="comp-check"><Check size={16} /></span>
                   ) : (
