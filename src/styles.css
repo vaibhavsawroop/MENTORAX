@@ -2065,25 +2065,24 @@ em, i { font-family: inherit; font-style: normal; font-weight: inherit; }
 }
 .hero-aurora-canvas.is-live { opacity: 1; }
 
-.hero-rocket {
+.hero-rocket-container {
   position: absolute;
   top: 12.4%;
   left: 76%;
   width: 30.2%;
-  height: auto;
   z-index: 1;
   pointer-events: none;
-  opacity: 0;
-  animation: hero-rocket-in 0.9s var(--ease-out-expo) 0.25s forwards;
+}
+
+.hero-rocket {
+  width: 100%;
+  height: auto;
+  pointer-events: none;
 }
 
 .rocket-dark { display: none; }
 [data-theme="dark"] .rocket-light { display: none; }
 [data-theme="dark"] .rocket-dark { display: block; }
-@keyframes hero-rocket-in {
-  from { opacity: 0; transform: translate3d(0, 26px, 0) scale(0.94); }
-  to   { opacity: 1; transform: none; }
-}
 
 .hero-art { pointer-events: none; }
 .hero-art::before, .hero-art::after, .hero-art > * { display: none; }
@@ -4376,7 +4375,7 @@ html[data-anim-fallback='static'] .pop-word { will-change: auto; }
    HERO ROCKET ILLUSTRATION (PERMANENT)
    ════════════════════════════════════════════════════════════════════ */
 
-.hero-rocket {
+.hero-rocket-container {
   position: absolute;
   top: 12.4%;
   right: -6.8%;
@@ -4393,7 +4392,7 @@ html[data-anim-fallback='static'] .pop-word { will-change: auto; }
 }
 
 @media (max-width: 1200px) {
-  .hero-rocket {
+  .hero-rocket-container {
     width: 440px;
     right: -4%;
     top: 14%;
@@ -4401,7 +4400,7 @@ html[data-anim-fallback='static'] .pop-word { will-change: auto; }
 }
 
 @media (max-width: 991px) {
-  .hero-rocket {
+  .hero-rocket-container {
     width: 360px;
     right: 0%;
     top: 18%;
@@ -4410,7 +4409,7 @@ html[data-anim-fallback='static'] .pop-word { will-change: auto; }
 }
 
 @media (max-width: 720px) {
-  .hero-rocket {
+  .hero-rocket-container {
     width: 280px;
     right: -2%;
     top: 22%;
@@ -4430,7 +4429,7 @@ html[data-anim-fallback='static'] .pop-word { will-change: auto; }
   }
   .hero-lede { max-width: 31rem; }
   .hero-art { min-height: 310px; margin: -30px -4vw -16px; }
-  .hero-rocket {
+  .hero-rocket-container {
     z-index: 1;
     top: 49%;
     right: -16%;

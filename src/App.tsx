@@ -251,14 +251,51 @@ function Tilt({ children, className = '' }: { children: React.ReactNode; classNa
 
 function Mark() { return <img className="mark" src="/logo.png" alt="MentoraX logo" /> }
 
+import gsap from 'gsap'
+
 function HeroShader() {
+  const rocketRef = useRef<HTMLDivElement>(null)
+  const reducedMotion = useReducedMotion()
+
+  useEffect(() => {
+    if (!rocketRef.current) return
+    const el = rocketRef.current
+    
+    if (reducedMotion) {
+      gsap.set(el, { opacity: 1, x: 0, y: 0, rotation: 0, scale: 1 })
+      return
+    }
+    
+    // Parabolic flight effect: we separate X and Y eases for the curve
+    gsap.set(el, { opacity: 0, x: -120, y: 120, rotation: -12, scale: 0.85 })
+    
+    // Fade and Rotate
+    gsap.to(el, { opacity: 1, rotation: 0, scale: 1, duration: 1.4, ease: "power2.out", delay: 0.1 })
+    
+    // The Parabolic Curve: X moves linearly/slightly eased, Y uses strong ease out
+    gsap.to(el, { x: 0, duration: 1.4, ease: "power1.out", delay: 0.1 })
+    gsap.to(el, { y: 0, duration: 1.4, ease: "back.out(1.2)", delay: 0.1 })
+    
+    // Subtle floating loop after landing
+    gsap.to(el, {
+      y: "-=8",
+      duration: 2.5,
+      ease: "sine.inOut",
+      yoyo: true,
+      repeat: -1,
+      delay: 1.5
+    })
+  }, [])
+
   return (
     <>
       <div className="hero-shader-wrap" aria-hidden="true">
         <HeroAurora />
       </div>
-      <img className="hero-rocket rocket-light" src="/rocket-illustration.avif" alt="MentoraX rocket illustration" aria-hidden="true" decoding="async" />
-      <img className="hero-rocket rocket-dark" src="/rocket-illustration-inverted.avif" alt="MentoraX rocket illustration" aria-hidden="true" decoding="async" />
+      <div ref={rocketRef} className="hero-rocket-container">
+        <img className="hero-rocket rocket-light" src="/rocket-illustration.avif" alt="MentoraX rocket illustration" aria-hidden="true" decoding="async" />
+        <img className="hero-rocket rocket-dark" src="/rocket-illustration-inverted.avif" alt="MentoraX rocket illustration" aria-hidden="true" decoding="async" />
+      </div>
     </>
   )
 }
