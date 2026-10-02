@@ -1207,21 +1207,39 @@ function InitialReveal() {
         onComplete: () => setActive(false)
       })
       
+      // Shiny neon material loop for the wordmark
+      gsap.to('.reveal-wordmark', {
+        backgroundPosition: '200% center',
+        duration: 3,
+        ease: 'none',
+        repeat: -1
+      })
+      
       // Initial logo fade in
       tl.fromTo(logoGlow, 
-        { opacity: 0, scale: 0.8, filter: 'blur(20px)' }, 
+        { opacity: 0, scale: 0.8, filter: 'blur(30px)' }, 
         { opacity: 1, scale: 1, filter: 'blur(0px)', duration: 1.2, ease: "power3.out" }
       )
       
       // Logo zooms in slightly and disappears
-      tl.to(logoGlow, { opacity: 0, scale: 1.1, filter: 'blur(10px)', duration: 0.5, ease: "power2.in" }, "+=0.4")
+      tl.to(logoGlow, { opacity: 0, scale: 1.15, filter: 'blur(15px)', duration: 0.5, ease: "power2.in" }, "+=0.4")
       
-      // The crazy tile flash and shrink
+      // The crazy tile flash and shrink using exact radial distance
+      const cx = cols / 2
+      const cy = rows / 2
+      const maxDist = Math.hypot(cx, cy)
+      
+      const getDelay = (i: number) => {
+        const c = i % cols
+        const r = Math.floor(i / cols)
+        return (Math.hypot(c - cx, r - cy) / maxDist) * 1.5
+      }
+
       // First, flash them to their accent colors instantly as the wave hits
       tl.to(tiles, {
         backgroundColor: (i, el) => el.dataset.accent,
         duration: 0.1,
-        stagger: { amount: 1.2, grid: [rows, cols], from: "center" }
+        delay: getDelay
       }, "-=0.1")
       
       // Immediately scale them down to 0
@@ -1230,7 +1248,7 @@ function InitialReveal() {
         opacity: 0,
         duration: 0.6,
         ease: "power3.inOut",
-        stagger: { amount: 1.2, grid: [rows, cols], from: "center" }
+        delay: getDelay
       }, "<0.05")
     })
 
@@ -1251,14 +1269,22 @@ function InitialReveal() {
         className="reveal-logo"
         style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 2, pointerEvents: 'none' }}
       >
-        <div style={{ position: 'absolute', width: '300px', height: '300px', background: 'radial-gradient(circle, rgba(155,138,255,0.15) 0%, transparent 70%)', mixBlendMode: 'screen' }} />
-        <div style={{ display: 'flex', alignItems: 'center', gap: '14px', zIndex: 2 }}>
-          <img src="/logo.png" style={{ width: '48px', height: '48px', filter: 'brightness(1.5) drop-shadow(0 0 12px rgba(216,255,106,0.3))' }} alt="" />
-          <span className="wordmark" style={{ fontSize: '3rem', color: '#fff', letterSpacing: '0.02em', textShadow: '0 4px 20px rgba(0,0,0,0.5)' }}>
-            mentora<span className="wordmark-x" style={{ color: '#d8ff6a' }}>x</span>
+        <div style={{ position: 'absolute', width: '600px', height: '600px', background: 'radial-gradient(circle, rgba(155,138,255,0.4) 0%, rgba(216,255,106,0.1) 40%, transparent 70%)', mixBlendMode: 'screen', filter: 'blur(40px)' }} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '18px', zIndex: 2 }}>
+          <img src="/logo.png" style={{ width: '64px', height: '64px', filter: 'brightness(2) drop-shadow(0 0 20px rgba(216,255,106,0.8)) drop-shadow(0 0 40px rgba(155,138,255,0.6))' }} alt="" />
+          <span className="reveal-wordmark" style={{ 
+            fontSize: '4.5rem', 
+            letterSpacing: '0.02em',
+            background: 'linear-gradient(to right, #fff 20%, #d8ff6a 40%, #9b8aff 60%, #fff 80%)',
+            backgroundSize: '200% auto',
+            color: 'transparent',
+            WebkitBackgroundClip: 'text',
+            filter: 'drop-shadow(0 0 15px rgba(216,255,106,0.5)) drop-shadow(0 0 30px rgba(155,138,255,0.5))'
+          }}>
+            mentora<span style={{ color: 'transparent', WebkitTextStroke: '2px #d8ff6a' }}>x</span>
           </span>
         </div>
-        <div style={{ color: '#a8a3bb', fontSize: '0.85rem', marginTop: '16px', letterSpacing: '0.15em', textTransform: 'uppercase' }}>
+        <div style={{ color: '#fff', fontSize: '1.1rem', marginTop: '24px', letterSpacing: '0.3em', textTransform: 'uppercase', filter: 'drop-shadow(0 0 10px rgba(255,255,255,0.6))', fontWeight: 600 }}>
           The Science of a Clear Path
         </div>
       </div>
