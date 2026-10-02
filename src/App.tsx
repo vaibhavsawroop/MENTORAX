@@ -1163,118 +1163,106 @@ function Policy({ kind, intro, sections }: { kind: string; intro: string; sectio
 
 function NotFound() { return <section className="not-found"><span>404</span><h1>This page took a different path.</h1><ArrowLink solid to="/">Return home</ArrowLink></section> }
 
-function TileGrid() {
-  const [grid, setGrid] = useState({ rows: 0, cols: 0 })
-  
-  useEffect(() => {
-    const size = window.innerWidth > 768 ? 100 : 70
-    setGrid({
-      cols: Math.ceil(window.innerWidth / size),
-      rows: Math.ceil(window.innerHeight / size)
-    })
-  }, [])
-
-  if (!grid.cols) return <div style={{ position: 'absolute', inset: 0, background: '#08070d' }} />
-
-  const tiles = []
-  const cx = grid.cols / 2
-  const cy = grid.rows / 2
-  const maxDist = Math.sqrt(cx*cx + cy*cy)
-
-  // MentoraX palette accents
-  const accents = ['#d8ff6a', '#9b8aff', '#e8f1df', '#27463c']
-
-  for (let r = 0; r < grid.rows; r++) {
-    for (let c = 0; c < grid.cols; c++) {
-      const dist = Math.sqrt(Math.pow(c - cx, 2) + Math.pow(r - cy, 2))
-      const normalizedDist = dist / maxDist
-      // Stagger from center out (circular wave)
-      const delay = 0.2 + (normalizedDist * 0.9)
-      const accent = accents[Math.floor(Math.random() * accents.length)]
-
-      tiles.push(
-        <motion.div
-          key={`${r}-${c}`}
-          initial={{ opacity: 1, scale: 1, backgroundColor: '#08070d' }}
-          exit={{ 
-            backgroundColor: ['#08070d', accent, 'transparent'],
-            scale: [1, 0.9, 0],
-            opacity: [1, 1, 0],
-            transition: { duration: 0.65, times: [0, 0.3, 1], ease: [0.76, 0, 0.24, 1], delay } 
-          }}
-          style={{
-            border: '0.5px solid rgba(255,255,255,0.02)' // subtle grid lines
-          }}
-        />
-      )
-    }
-  }
-
-  return (
-    <div style={{
-      position: 'absolute', inset: 0,
-      display: 'grid',
-      gridTemplateColumns: `repeat(${grid.cols}, 1fr)`,
-      gridTemplateRows: `repeat(${grid.rows}, 1fr)`,
-      zIndex: 0
-    }}>
-      {tiles}
-    </div>
-  )
-}
-
 function InitialReveal() {
   const [active, setActive] = useState(() => {
     if (typeof window === 'undefined') return false
     return !sessionStorage.getItem('mentorax-revealed')
   })
+  const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    if (active) {
-      sessionStorage.setItem('mentorax-revealed', 'true')
-      // Wait long enough for the tile radial wave to finish (0.2 + 0.9 + 0.65 = 1.75s)
-      const t = setTimeout(() => setActive(false), 2600)
-      return () => clearTimeout(t)
+    if (!active || !containerRef.current) return
+    
+    sessionStorage.setItem('mentorax-revealed', 'true')
+    
+    const container = containerRef.current
+    const tileContainer = container.querySelector('.tile-container') as HTMLElement
+    
+    // Create grid layout
+    const size = window.innerWidth > 768 ? 90 : 60
+    const cols = Math.ceil(window.innerWidth / size)
+    const rows = Math.ceil(window.innerHeight / size)
+    
+    tileContainer.style.gridTemplateColumns = `repeat(${cols}, 1fr)`
+    tileContainer.style.gridTemplateRows = `repeat(${rows}, 1fr)`
+    
+    const total = cols * rows
+    const accents = ['#d8ff6a', '#9b8aff', '#e8f1df', '#27463c']
+    
+    // Inject tiles directly to DOM for massive performance
+    for (let i = 0; i < total; i++) {
+      const tile = document.createElement('div')
+      tile.className = 'reveal-tile'
+      tile.style.backgroundColor = '#0c0b16'
+      tile.style.border = '0.5px solid rgba(255,255,255,0.02)'
+      tile.dataset.accent = accents[Math.floor(Math.random() * accents.length)]
+      tileContainer.appendChild(tile)
     }
+
+    const ctx = gsap.context(() => {
+      const logoGlow = container.querySelector('.reveal-logo')
+      const tiles = container.querySelectorAll('.reveal-tile')
+
+      const tl = gsap.timeline({
+        onComplete: () => setActive(false)
+      })
+      
+      // Initial logo fade in
+      tl.fromTo(logoGlow, 
+        { opacity: 0, scale: 0.8, filter: 'blur(20px)' }, 
+        { opacity: 1, scale: 1, filter: 'blur(0px)', duration: 1.2, ease: "power3.out" }
+      )
+      
+      // Logo zooms in slightly and disappears
+      tl.to(logoGlow, { opacity: 0, scale: 1.1, filter: 'blur(10px)', duration: 0.5, ease: "power2.in" }, "+=0.4")
+      
+      // The crazy tile flash and shrink
+      // First, flash them to their accent colors instantly as the wave hits
+      tl.to(tiles, {
+        backgroundColor: (i, el) => el.dataset.accent,
+        duration: 0.1,
+        stagger: { amount: 1.2, grid: [rows, cols], from: "center" }
+      }, "-=0.1")
+      
+      // Immediately scale them down to 0
+      tl.to(tiles, {
+        scale: 0,
+        opacity: 0,
+        duration: 0.6,
+        ease: "power3.inOut",
+        stagger: { amount: 1.2, grid: [rows, cols], from: "center" }
+      }, "<0.05")
+    })
+
+    return () => ctx.revert()
   }, [active])
 
+  if (!active) return null
+
   return (
-    <AnimatePresence>
-      {active && (
-        <motion.div
-          className="initial-reveal-wrapper"
-          style={{ position: 'fixed', inset: 0, zIndex: 99999, display: 'flex', pointerEvents: 'auto' }}
-        >
-          {/* The Square Tile Grid */}
-          <TileGrid />
-          
-          {/* Centered Logo & Glow */}
-          <motion.div 
-            style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 2, pointerEvents: 'none' }}
-            initial={{ opacity: 0, scale: 0.7, filter: 'blur(20px)' }}
-            animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
-            exit={{ opacity: 0, scale: 1.15, filter: 'blur(10px)', transition: { duration: 0.4, ease: "easeIn" } }}
-            transition={{ duration: 1.5, ease: [0.22, 1, 0.36, 1] }}
-          >
-            <div style={{ position: 'absolute', width: '300px', height: '300px', background: 'radial-gradient(circle, rgba(155,138,255,0.15) 0%, transparent 70%)', mixBlendMode: 'screen' }} />
-            <div style={{ display: 'flex', alignItems: 'center', gap: '14px', zIndex: 2 }}>
-              <img src="/logo.png" style={{ width: '48px', height: '48px', filter: 'brightness(1.5) drop-shadow(0 0 12px rgba(216,255,106,0.3))' }} alt="" />
-              <span className="wordmark" style={{ fontSize: '3rem', color: '#fff', letterSpacing: '0.02em', textShadow: '0 4px 20px rgba(0,0,0,0.5)' }}>
-                mentora<span className="wordmark-x" style={{ color: '#d8ff6a' }}>x</span>
-              </span>
-            </div>
-            <motion.div 
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6, duration: 1, ease: "easeOut" }}
-              style={{ color: '#a8a3bb', fontSize: '0.85rem', marginTop: '16px', letterSpacing: '0.15em', textTransform: 'uppercase' }}
-            >
-              The Science of a Clear Path
-            </motion.div>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+    <div
+      ref={containerRef}
+      className="initial-reveal-wrapper"
+      style={{ position: 'fixed', inset: 0, zIndex: 99999, display: 'flex', pointerEvents: 'auto', background: '#0c0b16' }}
+    >
+      <div className="tile-container" style={{ position: 'absolute', inset: 0, display: 'grid', zIndex: 1 }} />
+      
+      <div 
+        className="reveal-logo"
+        style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 2, pointerEvents: 'none' }}
+      >
+        <div style={{ position: 'absolute', width: '300px', height: '300px', background: 'radial-gradient(circle, rgba(155,138,255,0.15) 0%, transparent 70%)', mixBlendMode: 'screen' }} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px', zIndex: 2 }}>
+          <img src="/logo.png" style={{ width: '48px', height: '48px', filter: 'brightness(1.5) drop-shadow(0 0 12px rgba(216,255,106,0.3))' }} alt="" />
+          <span className="wordmark" style={{ fontSize: '3rem', color: '#fff', letterSpacing: '0.02em', textShadow: '0 4px 20px rgba(0,0,0,0.5)' }}>
+            mentora<span className="wordmark-x" style={{ color: '#d8ff6a' }}>x</span>
+          </span>
+        </div>
+        <div style={{ color: '#a8a3bb', fontSize: '0.85rem', marginTop: '16px', letterSpacing: '0.15em', textTransform: 'uppercase' }}>
+          The Science of a Clear Path
+        </div>
+      </div>
+    </div>
   )
 }
 
