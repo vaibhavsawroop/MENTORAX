@@ -1477,7 +1477,82 @@ em, i { font-family: inherit; font-style: normal; font-weight: inherit; }
   /* Disable tilt on touch: not meaningful and wastes compute */
   .tilt { transform: none !important; transition: none; }
   .plan-card::before { display: none; }
+
+  /* ── Disable hover transforms/animations on touch ──────────── */
+  /* Cards and interactive elements should not have sticky hover states */
+  .feature-card:hover,
+  .way-item:hover,
+  .stat-item:hover,
+  .mentor-card:hover,
+  .batch-banner-card:hover { transform: none; box-shadow: none; }
+  .feature-card:hover::after { opacity: 0; }
+  .feature-card:hover .feature-icon { transform: none; box-shadow: none; }
+  .feature-card:hover .feature-arrow { transform: none; }
+  .way-item:hover h3 { color: inherit; letter-spacing: inherit; }
+
+  /* Links & buttons: remove transform, keep functional tap */
+  .arrow-link:hover { gap: 12px; transform: none; }
+  .arrow-link.solid:hover { transform: none; box-shadow: none; }
+  .header-cta:hover { transform: none; box-shadow: none; }
+  .social-links a:hover { transform: none; box-shadow: none; }
+  .mentor-cta:hover { transform: none; }
+  .back-to-top:hover { transform: none; box-shadow: none; }
+  .slide-arrow:hover { transform: none; }
+  .success-reset:hover { border-color: var(--line); background: transparent; }
+  .builder-credit:hover { color: inherit; }
+  .builder-credit:hover::after { transform: scaleX(0); }
+
+  /* Book shapes: show labels always on touch since no hover */
+  .book-shape .book-hover-label { transform: translateY(0); opacity: 0.9; font-size: 0.55rem; }
+  .book-shape:hover::after { opacity: 0; }
+  .book-sculpture:hover .b-one,
+  .book-sculpture:hover .b-two,
+  .book-sculpture:hover .b-three { transform: none; }
+  .book-sculpture .b-one:hover,
+  .book-sculpture .b-two:hover,
+  .book-sculpture .b-three:hover { transform: none; box-shadow: none; }
+
+  /* Plan cards: remove glow */
+  .plan-card:hover::before { opacity: 0; }
+
+  /* Checkout: remove hover effects */
+  .checkout-product-card:hover { transform: none; box-shadow: none; }
+  .pay-method-pill:hover { transform: none; }
+  .checkout-submit-btn:hover { transform: none; }
+  .checkout-modal-close:hover { transform: none; }
+  .receipt-action-btn.primary:hover,
+  .receipt-action-btn.secondary:hover,
+  .receipt-action-btn.tertiary:hover { transform: none; }
+
+  /* Comparison table: remove row hover */
+  .comparison-table tbody tr:hover { background: transparent; }
+
+  /* Footer link hover */
+  .footer-column a:hover { transform: none; }
+  .contact-method a:hover { color: var(--lilac-deep); }
+
+  /* FAQ trigger: remove color change on touch hover */
+  .faq-trigger:hover { color: var(--ink); }
+
+  /* Desktop nav hover (won't show but safety) */
+  .desktop-nav a:hover { transform: none; }
+
+  /* Hover-member scroll cue */
+  .hover-member-scroll-cue:hover { transform: translateX(-50%); }
+
+  /* Larger touch targets for small interactive elements */
+  .slide-dot { width: 12px; height: 12px; min-width: 44px; min-height: 44px; padding: 0; background-clip: content-box; border: 18px solid transparent; box-sizing: content-box; margin: -18px -9px; }
+  .slide-dot-active { width: 28px; }
+
+  /* Ensure form selects and inputs are easy to tap */
+  .contact-form label select,
+  .contact-form label input,
+  .contact-form label textarea { min-height: 48px; font-size: 1rem; }
+
+  /* Policy sidebar links: tap-friendly */
+  .policy-layout aside a { min-height: 44px; display: inline-flex; align-items: center; }
 }
+
 
 /* Smooth scroll only when user hasn't opted out */
 @media (prefers-reduced-motion: no-preference) {
@@ -1996,11 +2071,15 @@ em, i { font-family: inherit; font-style: normal; font-weight: inherit; }
   left: 76%;
   width: 30.2%;
   height: auto;
-  z-index: 1; /* above the shader shape (z 0), under hero content (z 2) */
+  z-index: 1;
   pointer-events: none;
   opacity: 0;
   animation: hero-rocket-in 0.9s var(--ease-out-expo) 0.25s forwards;
 }
+
+.rocket-dark { display: none; }
+[data-theme="dark"] .rocket-light { display: none; }
+[data-theme="dark"] .rocket-dark { display: block; }
 @keyframes hero-rocket-in {
   from { opacity: 0; transform: translate3d(0, 26px, 0) scale(0.94); }
   to   { opacity: 1; transform: none; }
@@ -2195,13 +2274,30 @@ em, i { font-family: inherit; font-style: normal; font-weight: inherit; }
   .hover-member-avatar-wrap,
   .hover-member-avatar-img,
   .hover-member-avatar-placeholder {
-    width: 46px;
-    height: 46px;
+    width: 50px;
+    height: 50px;
     border-radius: 50%;
   }
   .hover-member-avatars {
-    gap: 7px;
+    gap: 9px;
     margin-bottom: 28px;
+    flex-wrap: wrap;
+    max-width: 90%;
+    justify-content: center;
+  }
+  /* Active state ring for tapped member on mobile */
+  .hover-member-avatar-wrap.is-hovered {
+    box-shadow: 0 0 0 3px var(--lilac, #9b8aff);
+    border-radius: 50%;
+  }
+  /* Tooltip stays visible on tap, don't clip */
+  .hover-member-tooltip {
+    pointer-events: auto;
+  }
+  /* Scroll cue smaller on mobile */
+  .hover-member-scroll-cue {
+    width: 64px;
+    height: 64px;
   }
 }
 

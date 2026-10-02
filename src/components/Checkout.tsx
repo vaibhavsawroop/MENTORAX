@@ -130,7 +130,7 @@ export const PRODUCTS: Record<string, ProductItem> = {
     tag: 'Limited Offer · 50% OFF',
     forWhom: 'Class 12 Students, 1st Droppers, 2nd Droppers',
     features: [
-      'Guidance from 4 dedicated mentors (Raj, Aditya, Bhavesa, Sparsh)',
+      'Guidance from 4 dedicated mentors (Raj, Aditya, Bhavesha, Sparsh)',
       'Interactive cohort Google Meet guidance sessions',
       'Curated Daily Practice Problems (DPP) sets',
       'Complete IAT Previous Year Questions (PYQs) Solutions',

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 export interface HoverMemberItem {
@@ -15,6 +15,19 @@ interface HoverMemberProps {
   textColor?: string
   hoverTextColor?: string
   scrollTarget?: string
+}
+
+// Detect if the device supports touch (coarse pointer)
+function useIsTouchDevice() {
+  const [isTouch, setIsTouch] = useState(false)
+  useEffect(() => {
+    setIsTouch(
+      'ontouchstart' in window ||
+      navigator.maxTouchPoints > 0 ||
+      window.matchMedia('(pointer: coarse)').matches
+    )
+  }, [])
+  return isTouch
 }
 
 // Animate characters one-by-one with stagger
@@ -68,31 +81,69 @@ export function HoverMember({
   hoverTextColor = '#ffffff',
   scrollTarget = '#team-contact',
 }: HoverMemberProps) {
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
+  const [activeIndex, setActiveIndex] = useState<number | null>(null)
+  const isTouch = useIsTouchDevice()
+
+  // On mobile: tap outside any avatar to deselect
+  const handleRootClick = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      if (!isTouch) return
+      const target = e.target as HTMLElement
+      // If tapped outside any avatar bubble, deselect
+      if (!target.closest('.hover-member-avatar-wrap')) {
+        setActiveIndex(null)
+      }
+    },
+    [isTouch],
+  )
+
+  const handleAvatarInteraction = useCallback(
+    (index: number) => {
+      if (isTouch) {
+        // Toggle on tap
+        setActiveIndex((prev) => (prev === index ? null : index))
+      } else {
+        setActiveIndex(index)
+      }
+    },
+    [isTouch],
+  )
+
+  const handleAvatarLeave = useCallback(() => {
+    if (!isTouch) {
+      setActiveIndex(null)
+    }
+  }, [isTouch])
 
   const displayText =
-    hoveredIndex !== null
-      ? teamMembers[hoveredIndex].name.toUpperCase()
+    activeIndex !== null
+      ? teamMembers[activeIndex].name.toUpperCase()
       : defaultText.toUpperCase()
 
-  const activeColor = hoveredIndex !== null ? hoverTextColor : textColor
+  const activeColor = activeIndex !== null ? hoverTextColor : textColor
 
   return (
     <div
-      className="hover-member-root"
+      className={`hover-member-root ${isTouch ? 'is-touch-member' : ''}`}
       style={{ '--hover-member-bg': backgroundColor } as React.CSSProperties}
+      onClick={handleRootClick}
     >
       {/* Avatar row */}
       <div className="hover-member-avatars">
         {teamMembers.map((member, index) => (
           <motion.div
             key={member.name}
-            className={`hover-member-avatar-wrap ${hoveredIndex === index ? 'is-hovered' : ''} ${hoveredIndex !== null && hoveredIndex !== index ? 'is-dimmed' : ''}`}
-            onMouseEnter={() => setHoveredIndex(index)}
-            onMouseLeave={() => setHoveredIndex(null)}
-            onFocus={() => setHoveredIndex(index)}
-            onBlur={() => setHoveredIndex(null)}
-            whileHover={{ y: -8, scale: 1.04 }}
+            className={`hover-member-avatar-wrap ${activeIndex === index ? 'is-hovered' : ''} ${activeIndex !== null && activeIndex !== index ? 'is-dimmed' : ''}`}
+            onMouseEnter={() => !isTouch && setActiveIndex(index)}
+            onMouseLeave={handleAvatarLeave}
+            onClick={(e) => {
+              e.stopPropagation()
+              handleAvatarInteraction(index)
+            }}
+            onFocus={() => setActiveIndex(index)}
+            onBlur={() => !isTouch && setActiveIndex(null)}
+            whileHover={isTouch ? undefined : { y: -8, scale: 1.04 }}
+            animate={isTouch && activeIndex === index ? { y: -8, scale: 1.04 } : { y: 0, scale: 1 }}
             transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
             tabIndex={0}
             role="group"
@@ -110,9 +161,9 @@ export function HoverMember({
                 {member.initials}
               </div>
             )}
-            {/* Name tooltip */}
+            {/* Name tooltip — always visible for active member on touch */}
             <AnimatePresence>
-              {hoveredIndex === index && (
+              {activeIndex === index && (
                 <motion.div
                   className="hover-member-tooltip"
                   initial={{ opacity: 0, y: 6 }}
@@ -152,3 +203,4 @@ export function HoverMember({
     </div>
   )
 }
+

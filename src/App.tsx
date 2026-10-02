@@ -72,7 +72,7 @@ type MentorCard = {
 
 const mentors: MentorCard[] = [
   { initials: 'R', name: 'Raj', role: 'Mathematics Mentor', detail: 'IISER TVM · Mentored 2,200+ students across India with precision guidance on strategy, schedule optimization, and conceptual clarity.', tone: 'violet', portrait: '/mentors/raj.png', portraitAlt: 'Raj, MentoraX Mathematics Mentor', subjects: ['IAT Maths', 'Strategy', 'Schedule optimization'] },
-  { initials: 'B', name: 'Bhavesa', role: 'Physics Mentor', detail: 'IISER TVM · Currently leading research projects at ISRO. Core guidance on exam methodology and physics orientation.', tone: 'sage', portrait: '/mentors/bhavesha.png', portraitAlt: 'Bhavesa, MentoraX Physics Mentor', subjects: ['Exam methodology', 'Physics orientation', 'ISRO research'] },
+  { initials: 'B', name: 'Bhavesha', role: 'Physics Mentor', detail: 'IISER TVM · Currently leading research projects at ISRO. Core guidance on exam methodology and physics orientation.', tone: 'sage', portrait: '/mentors/bhavesha.png', portraitAlt: 'Bhavesha, MentoraX Physics Mentor', subjects: ['Exam methodology', 'Physics orientation', 'ISRO research'] },
   { initials: 'AT', name: 'Aditya', role: 'Chemistry Mentor', detail: 'IIT Madras · AIR 544 in IAT 2026. Structured preparation blueprints for Physical, Organic, and Inorganic Chemistry.', tone: 'coral', portrait: '/mentors/aditya-thakur.png', portraitAlt: 'Aditya, MentoraX Chemistry Mentor', subjects: ['Physical', 'Organic', 'Inorganic'] },
   { initials: 'SB', name: 'Sparsh', role: 'Biology Mentor', detail: 'IISER Tirupati · Targeted NCERT retention tactics and high-efficiency revision roadmaps for Biology.', tone: 'ink', subjects: ['NCERT Biology', 'Retention tactics', 'Revision roadmaps'] },
 ]
@@ -257,7 +257,8 @@ function HeroShader() {
       <div className="hero-shader-wrap" aria-hidden="true">
         <HeroAurora />
       </div>
-      <img className="hero-rocket" src="/rocket-illustration.avif" alt="MentoraX rocket illustration" aria-hidden="true" decoding="async" />
+      <img className="hero-rocket rocket-light" src="/rocket-illustration.avif" alt="MentoraX rocket illustration" aria-hidden="true" decoding="async" />
+      <img className="hero-rocket rocket-dark" src="/rocket-illustration-inverted.avif" alt="MentoraX rocket illustration" aria-hidden="true" decoding="async" />
     </>
   )
 }
@@ -354,7 +355,7 @@ function Footer() {
     window.location.href = 'intent://instagram.com/_u/vaibhavsawroop/#Intent;package=com.instagram.android;scheme=https;S.browser_fallback_url=https%3A%2F%2Fwww.instagram.com%2Fvaibhavsawroop%2F;end'
   }
 
-  return <footer className="site-footer"><div className="footer-grid"><div data-reveal="up"><Link className="wordmark footer-mark" to="/"><Mark /><span>mentora<span className="wordmark-x">x</span></span></Link><p className="footer-statement">A focused mentorship studio for IAT, NEST, CUET, and science entrance aspirants. Managed with intent by Raj &amp; Dipti.</p><div className="social-links"><a href="mailto:support@mentorax.in" aria-label="Email MentoraX"><Mail size={17} /></a></div></div><FooterColumn title="Explore" links={navItems} /><FooterColumn title="Company" links={[["Contact Us", "/contact"], ["Refund & Cancellation Policy", "/refund-policy"], ["Privacy Policy", "/privacy-policy"], ["Terms & Conditions", "/terms"]]} /><div className="footer-note" data-reveal="up"><span className="tiny-kicker">A note from us</span><p>There is no shortcut to a good path. Only better guidance along it.</p></div></div><div className="footer-bottom"><span>© 2026 MentoraX. All Rights Reserved.</span><span>Website Built By <a className="builder-credit" href="https://www.instagram.com/vaibhavsawroop" target="_blank" rel="noopener noreferrer" onClick={openBuilderInstagram}>Vaibhav Sawroop</a></span><span>Made for the long game.</span></div></footer>
+  return <footer className="site-footer"><div className="footer-grid"><div data-reveal="up"><Link className="wordmark footer-mark" to="/"><Mark /><span>mentora<span className="wordmark-x">x</span></span></Link><p className="footer-statement">A focused mentorship studio for IAT, NEST, CUET, and science entrance aspirants. Managed with intent by Raj &amp; Dipti.</p><div className="social-links"><a href="mailto:managementrajiiserit@gmail.com" aria-label="Email MentoraX"><Mail size={17} /></a></div></div><FooterColumn title="Explore" links={navItems} /><FooterColumn title="Company" links={[["Contact Us", "/contact"], ["Refund & Cancellation Policy", "/refund-policy"], ["Privacy Policy", "/privacy-policy"], ["Terms & Conditions", "/terms"]]} /><div className="footer-note" data-reveal="up"><span className="tiny-kicker">A note from us</span><p>There is no shortcut to a good path. Only better guidance along it.</p></div></div><div className="footer-bottom"><span>© 2026 MentoraX. All Rights Reserved.</span><span>Website Built By <a className="builder-credit" href="https://www.instagram.com/vaibhavsawroop" target="_blank" rel="noopener noreferrer" onClick={openBuilderInstagram}>Vaibhav Sawroop</a></span><span>Made for the long game.</span></div></footer>
 }
 
 function FooterColumn({ title, links }: { title: string; links: readonly (readonly [string, string])[] }) {
@@ -910,13 +911,11 @@ function Mentors() { return <><div className="page-intro-compact"><PageIntro ind
 
 // Add `image: '/images/team/<filename>.jpg'` to each entry when portrait photos are available
 const hoverTeamMembers: HoverMemberItem[] = [
-  { name: 'Raj', role: 'Maths Mentor', initials: 'R' },
+  { name: 'Raj', role: 'CEO', initials: 'R', image: '/mentors/raj.png' },
+  { name: 'Dipti', role: 'CMO', initials: 'D', image: '/mentors/dipti.png' },
   { name: 'Bhavesha', role: 'Physics Mentor', initials: 'B', image: '/mentors/bhavesha.png' },
   { name: 'Aditya Thakur', role: 'Chemistry Mentor', initials: 'AT', image: '/mentors/aditya-thakur.png' },
   { name: 'Sparsh Bansal', role: 'Biology Mentor', initials: 'SB' },
-  { name: 'Dipti', role: 'Co-founder & Mentor', initials: 'D', image: '/mentors/dipti.png' },
-  { name: 'Team 04', role: 'Student Experience', initials: '04' },
-  { name: 'Team 05', role: 'Student Support', initials: '05' },
 ]
 
 function Team() {
