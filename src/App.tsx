@@ -48,9 +48,9 @@ const CheckoutPage = lazy(() => import('./components/Checkout').then((m) => ({ d
 const Clouds = lazy(() => import('./components/canvasui/Clouds').then((m) => ({ default: m.Clouds })))
 
 const plans = [
-  { name: 'Catalyst', index: '01', price: '₹1,500', originalPrice: '₹3,000', note: 'IAT 2027 · Class 12 + Droppers · Build Momentum, Crack IAT.', cohort: 'Class 12 & Droppers', duration: '1 Year', features: ['Guidance from 4 dedicated mentors (PCMB)', 'Interactive cohort Google Meet guidance sessions', 'Curated Daily Practice Problems (DPPs)', 'Complete IAT PYQ Solutions', 'Progress Tracking & Strategy Guidance', 'Personalised Study Plan & Doubt Support (WhatsApp)'], accent: 'lilac', productId: 'catalyst', banner: '/batches/catalyst.jpg' },
-  { name: 'Quantum', index: '02', price: '₹5,000', originalPrice: '₹10,000', note: 'IAT 2027 · Class 12 + Droppers · Intensive Personalised 1-on-1 Guidance.', cohort: 'Class 12 & Droppers', duration: '1 Year (365 days)', features: ['Dedicated 1-on-1 personal mentor for 1 full year', 'Daily Targets via Email — planned schedules to your inbox', 'Structured Day Architecture — daily study plan & milestones', 'Continuous Support — calls, DMs & 1-on-1 Google Meet', 'Physical IAT MentoraX PYQ Book shipped to doorstep', 'All Core Resources — DPPs, IAT PYQs, 4-subject guidance'], accent: 'lime', featured: true, productId: 'quantum', banner: '/batches/quantum.jpg' },
-  { name: 'Genesis', index: '03', price: '₹10,000', originalPrice: '₹20,000', note: 'IAT 2027 · Class 11 Foundation · 2-Year Long-Term Scientist Pathway.', cohort: 'Class 11 Foundation', duration: '2 Years (Class 11 + 12)', features: ['1-on-1 Personalised Mentorship with dedicated mentor', 'Planned Day Structure & Email Targets daily', 'Comprehensive Foundation Planning & milestone tracking', 'Regular Google Meet sessions with all 4 mentors', 'Continuous Support — calls, DMs & personalised check-ins', 'Physical IAT MentoraX PYQ Book shipped to doorstep'], accent: 'peach', productId: 'genesis', banner: '/batches/genesis.jpg' },
+  { name: 'Catalyst', index: '01', price: '₹1,500', originalPrice: '₹3,000', note: 'IAT 2027 · Class 12 + Droppers · Build Momentum, Crack IAT.', cohort: 'Class 12 & Droppers', duration: '1 Year', features: ['Guidance from 4 dedicated mentors (PCMB)', 'Interactive cohort Google Meet guidance sessions', 'Curated Daily Practice Problems (DPPs)', 'Complete IAT PYQ Solutions', 'Progress Tracking & Strategy Guidance', 'Personalised Study Plan & Doubt Support (WhatsApp)'], accent: 'lilac', productId: 'catalyst', banner: '/batches/catalyst.webp' },
+  { name: 'Quantum', index: '02', price: '₹5,000', originalPrice: '₹10,000', note: 'IAT 2027 · Class 12 + Droppers · Intensive Personalised 1-on-1 Guidance.', cohort: 'Class 12 & Droppers', duration: '1 Year (365 days)', features: ['Dedicated 1-on-1 personal mentor for 1 full year', 'Daily Targets via Email — planned schedules to your inbox', 'Structured Day Architecture — daily study plan & milestones', 'Continuous Support — calls, DMs & 1-on-1 Google Meet', 'Physical IAT MentoraX PYQ Book shipped to doorstep', 'All Core Resources — DPPs, IAT PYQs, 4-subject guidance'], accent: 'lime', featured: true, productId: 'quantum', banner: '/batches/quantum.webp' },
+  { name: 'Genesis', index: '03', price: '₹10,000', originalPrice: '₹20,000', note: 'IAT 2027 · Class 11 Foundation · 2-Year Long-Term Scientist Pathway.', cohort: 'Class 11 Foundation', duration: '2 Years (Class 11 + 12)', features: ['1-on-1 Personalised Mentorship with dedicated mentor', 'Planned Day Structure & Email Targets daily', 'Comprehensive Foundation Planning & milestone tracking', 'Regular Google Meet sessions with all 4 mentors', 'Continuous Support — calls, DMs & personalised check-ins', 'Physical IAT MentoraX PYQ Book shipped to doorstep'], accent: 'peach', productId: 'genesis', banner: '/batches/genesis.webp' },
 ]
 
 const materials = [
@@ -72,9 +72,9 @@ type MentorCard = {
 }
 
 const mentors: MentorCard[] = [
-  { initials: 'R', name: 'Raj', role: 'Mathematics Mentor', detail: 'IISER TVM · Mentored 2,200+ students across India with precision guidance on strategy, schedule optimization, and conceptual clarity.', tone: 'violet', portrait: '/mentors/raj.png', portraitAlt: 'Raj, MentoraX Mathematics Mentor', subjects: ['IAT Maths', 'Strategy', 'Schedule optimization'] },
-  { initials: 'B', name: 'Bhavesha', role: 'Physics Mentor', detail: 'IISER TVM · Currently leading research projects at ISRO. Core guidance on exam methodology and physics orientation.', tone: 'sage', portrait: '/mentors/bhavesha.png', portraitAlt: 'Bhavesha, MentoraX Physics Mentor', subjects: ['Exam methodology', 'Physics orientation', 'ISRO research'] },
-  { initials: 'AT', name: 'Aditya', role: 'Chemistry Mentor', detail: 'IIT Madras · AIR 544 in IAT 2026. Structured preparation blueprints for Physical, Organic, and Inorganic Chemistry.', tone: 'coral', portrait: '/mentors/aditya-thakur.png', portraitAlt: 'Aditya, MentoraX Chemistry Mentor', subjects: ['Physical', 'Organic', 'Inorganic'] },
+  { initials: 'R', name: 'Raj', role: 'Mathematics Mentor', detail: 'IISER TVM · Mentored 2,200+ students across India with precision guidance on strategy, schedule optimization, and conceptual clarity.', tone: 'violet', portrait: '/mentors/raj.webp', portraitAlt: 'Raj, MentoraX Mathematics Mentor', subjects: ['IAT Maths', 'Strategy', 'Schedule optimization'] },
+  { initials: 'B', name: 'Bhavesha', role: 'Physics Mentor', detail: 'IISER TVM · Currently leading research projects at ISRO. Core guidance on exam methodology and physics orientation.', tone: 'sage', portrait: '/mentors/bhavesha.webp', portraitAlt: 'Bhavesha, MentoraX Physics Mentor', subjects: ['Exam methodology', 'Physics orientation', 'ISRO research'] },
+  { initials: 'AT', name: 'Aditya', role: 'Chemistry Mentor', detail: 'IIT Madras · AIR 544 in IAT 2026. Structured preparation blueprints for Physical, Organic, and Inorganic Chemistry.', tone: 'coral', portrait: '/mentors/aditya-thakur.webp', portraitAlt: 'Aditya, MentoraX Chemistry Mentor', subjects: ['Physical', 'Organic', 'Inorganic'] },
   { initials: 'SB', name: 'Sparsh', role: 'Biology Mentor', detail: 'IISER Tirupati · Targeted NCERT retention tactics and high-efficiency revision roadmaps for Biology.', tone: 'ink', subjects: ['NCERT Biology', 'Retention tactics', 'Revision roadmaps'] },
 ]
 
@@ -250,30 +250,51 @@ function Tilt({ children, className = '' }: { children: React.ReactNode; classNa
   return <div className={`tilt ${className}`} onMouseMove={move} onMouseLeave={leave}>{children}</div>
 }
 
-function Mark() { return <img className="mark" src="/logo.png" alt="MentoraX logo" /> }
+/** The header/footer mark. The 1024px source PNG stays in public/ for the
+ *  favicon; every in-page use rides the 128px WebP (2 KB vs 82 KB). */
+function Mark() { return <img className="mark" src="/logo-mark.webp" alt="MentoraX logo" decoding="async" /> }
 
 import gsap from 'gsap'
 
 function HeroShader() {
   const rocketRef = useRef<HTMLDivElement>(null)
   const reducedMotion = useReducedMotion()
+  const [dark, setDark] = useState(() => document.documentElement.getAttribute('data-theme') === 'dark')
+
+  // Only the illustration this theme actually shows is ever requested: a
+  // `display: none` image still gets downloaded, so shipping both rockets cost
+  // every visitor an unseen 31–77 KB on first load.
+  useEffect(() => {
+    const root = document.documentElement
+    const sync = () => setDark(root.getAttribute('data-theme') === 'dark')
+    const observer = new MutationObserver(sync)
+    observer.observe(root, { attributes: true, attributeFilter: ['data-theme'] })
+    sync()
+    return () => observer.disconnect()
+  }, [])
 
   useEffect(() => {
     if (!rocketRef.current) return
     const el = rocketRef.current
     
     let ctx = gsap.context(() => {
-      const animateRocket = (delay: number) => {
+      /* Park the rocket in its flight origin — inside the frame, down-left of
+         the landing spot — with the tweens killed, so every replay starts
+         clean. Parked, it is invisible; because HeroShader mounts under the
+         entrance overlay, parking on mount is what keeps the rocket from
+         sitting in its landing spot and then jumping when the doors open. */
+      const parkRocket = () => {
+        if (reducedMotion) return
+        gsap.killTweensOf(el)
+        gsap.set(el, { opacity: 0, x: -280, y: 200, rotation: -18, scale: 0.7 })
+      }
+
+      const flyRocket = (delay: number) => {
         if (reducedMotion) {
           gsap.set(el, { opacity: 1, x: 0, y: 0, rotation: 0, scale: 1 })
           return
         }
-        
-        // Kill existing animations before restarting
-        gsap.killTweensOf(el)
-        
-        // Parabolic flight effect: Start further inside (more left/down) so it's fully visible
-        gsap.set(el, { opacity: 0, x: -280, y: 200, rotation: -18, scale: 0.7 })
+        parkRocket()
         
         // Fade, Scale and Rotate (Buttery smooth)
         gsap.to(el, { opacity: 1, rotation: 0, scale: 1, duration: 1.8, ease: "power3.out", delay })
@@ -293,40 +314,81 @@ function HeroShader() {
         })
       }
 
-      // Launch choreography: the entrance reveal dispatches
-      // `mentorax:entrance-done` the moment its doors open, so the rocket
-      // flies through the gap instead of racing a hardcoded timer. On repeat
-      // visits (no reveal) it launches immediately.
-      let launched = false
-      let fallback = 0
-      const launch = () => {
-        if (launched) return
-        launched = true
-        window.clearTimeout(fallback)
-        animateRocket(0.12)
+      /* Launch choreography — the flight is parked while the entrance overlay
+         still owns the screen, then plays as usual the moment its doors open.
+         The gate is polled on the animation frame instead of trusted to a
+         one-shot event: the reveal stamps `data-entrance` on <html> and always
+         clears it (timeline end, unmount, or its own 5 s guard), so a frame
+         loop cannot miss the handoff the way an event listener can when a
+         StrictMode remount swaps the listener out. On repeat visits (no
+         entrance) the rocket launches immediately. */
+      let handoffRaf = 0
+      let queuedDelay = 0.12
+      let waiting = false
+
+      const entranceRunning = () => document.documentElement.dataset.entrance === 'running'
+
+      const flyWhenClear = (delay = 0.15) => {
+        queuedDelay = delay
+        if (!entranceRunning()) {
+          if (handoffRaf) cancelAnimationFrame(handoffRaf)
+          handoffRaf = 0
+          waiting = false
+          flyRocket(delay)
+          return
+        }
+        if (waiting) return
+        waiting = true
+        const tick = () => {
+          if (!entranceRunning()) {
+            waiting = false
+            handoffRaf = 0
+            flyRocket(queuedDelay)
+            return
+          }
+          handoffRaf = requestAnimationFrame(tick)
+        }
+        handoffRaf = requestAnimationFrame(tick)
       }
 
-      if (document.documentElement.dataset.entrance === 'running') {
-        window.addEventListener('mentorax:entrance-done', launch, { once: true })
-        fallback = window.setTimeout(launch, 5200) // reveal guard fires at 5s
-      } else {
-        launch()
+      const stopWaiting = () => {
+        if (handoffRaf) cancelAnimationFrame(handoffRaf)
+        handoffRaf = 0
+        waiting = false
       }
+
+      // Park before the first decision so the rocket is never visible in its
+      // landing spot while the entrance still covers the screen.
+      parkRocket()
+
+      // Decide on a macrotask so every mount effect has run first: a StrictMode
+      // remount re-stamps `data-entrance` moments after this effect fires.
+      const boot = window.setTimeout(() => flyWhenClear(0.12), 0)
 
       // Watch for theme changes to run the flight again
       const observer = new MutationObserver((mutations) => {
         for (const m of mutations) {
           if (m.attributeName === 'data-theme') {
-            animateRocket(0.15)
+            flyWhenClear()
           }
         }
       })
       observer.observe(document.documentElement, { attributes: true })
 
+      /* Last-resort guard: however the choreography is interrupted, the
+         rocket must never stay parked and invisible — put it back on its
+         mark. A no-op once the flight (or a reduced-motion set) has run. */
+      const safety = window.setTimeout(() => {
+        if (parseFloat(getComputedStyle(el).opacity) > 0.05) return
+        gsap.killTweensOf(el)
+        gsap.set(el, { opacity: 1, x: 0, y: 0, rotation: 0, scale: 1 })
+      }, 8000)
+
       return () => {
+        window.clearTimeout(boot)
+        window.clearTimeout(safety)
         observer.disconnect()
-        window.clearTimeout(fallback)
-        window.removeEventListener('mentorax:entrance-done', launch)
+        stopWaiting()
       }
     })
     
@@ -339,8 +401,11 @@ function HeroShader() {
         <HeroAurora />
       </div>
       <div ref={rocketRef} className="hero-rocket-container">
-        <img className="hero-rocket rocket-light" src="/rocket-illustration.avif" alt="MentoraX rocket illustration" aria-hidden="true" decoding="async" />
-        <img className="hero-rocket rocket-dark" src="/rocket-illustration-inverted.avif" alt="MentoraX rocket illustration" aria-hidden="true" decoding="async" />
+        {dark ? (
+          <img className="hero-rocket rocket-dark" src="/rocket-illustration-inverted.webp" alt="MentoraX rocket illustration" aria-hidden="true" decoding="async" />
+        ) : (
+          <img className="hero-rocket rocket-light" src="/rocket-illustration.avif" alt="MentoraX rocket illustration" aria-hidden="true" decoding="async" />
+        )}
       </div>
     </>
   )
@@ -994,10 +1059,10 @@ function Mentors() { return <><div className="page-intro-compact"><PageIntro ind
 
 // Add `image: '/images/team/<filename>.jpg'` to each entry when portrait photos are available
 const hoverTeamMembers: HoverMemberItem[] = [
-  { name: 'Raj', role: 'CEO', initials: 'R', image: '/mentors/raj.png' },
-  { name: 'Dipti', role: 'CMO', initials: 'D', image: '/mentors/dipti.png' },
-  { name: 'Bhavesha', role: 'Physics Mentor', initials: 'B', image: '/mentors/bhavesha.png' },
-  { name: 'Aditya Thakur', role: 'Chemistry Mentor', initials: 'AT', image: '/mentors/aditya-thakur.png' },
+  { name: 'Raj', role: 'CEO', initials: 'R', image: '/mentors/raj.webp' },
+  { name: 'Dipti', role: 'CMO', initials: 'D', image: '/mentors/dipti.webp' },
+  { name: 'Bhavesha', role: 'Physics Mentor', initials: 'B', image: '/mentors/bhavesha.webp' },
+  { name: 'Aditya Thakur', role: 'Chemistry Mentor', initials: 'AT', image: '/mentors/aditya-thakur.webp' },
   { name: 'Sparsh Bansal', role: 'Biology Mentor', initials: 'SB' },
 ]
 

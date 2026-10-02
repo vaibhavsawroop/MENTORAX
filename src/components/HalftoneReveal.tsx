@@ -266,7 +266,7 @@ export function HalftoneReveal({
 
   return (
     <div ref={containerRef} className={`halftone-reveal ${className}`.trim()} role="img" aria-label={alt}>
-      <img className="halftone-fallback" src={src} alt="" />
+      <img className="halftone-fallback" src={src} alt="" loading="lazy" decoding="async" />
     </div>
   )
 }

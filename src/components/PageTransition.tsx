@@ -70,7 +70,7 @@ export function PageTransition() {
         animate={{ opacity: phase === 'in' ? 1 : 0, y: phase === 'in' ? 0 : -8 }}
         transition={{ duration: phase === 'in' ? .42 : .22, delay: phase === 'in' ? .1 : 0 }}
       >
-        <img className="page-transition-mark" src="/logo.png" alt="" />
+        <img className="page-transition-mark" src="/logo-mark.webp" alt="" />
         <span>mentora<span className="page-transition-x">x</span></span>
       </motion.div>
     </motion.div>

@@ -13,7 +13,7 @@
   --cyan: #9CE7D5;
   --serif: 'Plus Jakarta Sans', system-ui, sans-serif;
   --sans: 'Plus Jakarta Sans', system-ui, sans-serif;
-  --mono: 'Space Mono', monospace;
+  --mono: 'JetBrains Mono', monospace;
   --display: 'Syne', sans-serif;
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
@@ -500,9 +500,12 @@ em, i { font-family: inherit; font-style: normal; font-weight: inherit; }
 .scroll-rule i {
   position: absolute;
   top: 0;
+  left: 0;
   width: 32%;
   height: 2px;
   border-radius: 999px;
+  /* The sweep travels on the compositor: translating beats animating `left`,
+     which would re-run layout on every frame of an infinite loop. */
   animation: scan 2.9s ease-in-out infinite;
   background: linear-gradient(
     90deg,
@@ -514,7 +517,7 @@ em, i { font-family: inherit; font-style: normal; font-weight: inherit; }
   );
   filter: blur(0.4px);
 }
-@keyframes scan { 0%, 100% { left: -32%; } 100% { left: 100%; } }
+@keyframes scan { from { transform: translateX(-100%); } to { transform: translateX(313%); } }
 
 .manifesto { border-top: 1px solid var(--line); }
 .manifesto-grid { display: grid; grid-template-columns: .34fr 1.08fr .72fr; gap: clamp(25px, 6vw, 90px); align-items: start; }
@@ -1062,11 +1065,47 @@ html[data-anim-fallback='static'] .initial-reveal { display: none; }
   display: grid;
   gap: 1px;
 }
+/* Each cell is a bevelled pane of tinted glass: a specular glint at the top
+   left, a soft sheen from the bottom right, a lit top edge, a shadowed bottom
+   edge and a faint bloom in the cell's own accent colour. The composition is
+   entirely static — painted once — because GSAP only ever animates opacity
+   and scale, so the glossy detail costs nothing per frame. */
 .ir-tile {
   display: block;
   opacity: 0;
-  border-radius: 1px;
-  box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .05);
+  border-radius: clamp(3px, 9%, 10px);
+  background-color: var(--tile-accent, #d8ff6a);
+  background-image:
+    radial-gradient(130% 100% at 24% 10%, rgba(255, 255, 255, .82) 0%, rgba(255, 255, 255, .3) 16%, rgba(255, 255, 255, 0) 46%),
+    linear-gradient(150deg, rgba(255, 255, 255, .5) 0%, rgba(255, 255, 255, .06) 34%, rgba(255, 255, 255, 0) 52%),
+    linear-gradient(335deg, rgba(255, 255, 255, .28) 0%, rgba(255, 255, 255, 0) 42%),
+    linear-gradient(180deg, rgba(255, 255, 255, .26) 0%, rgba(6, 5, 14, .36) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .7),
+    inset 0 -1px 0 rgba(0, 0, 0, .4),
+    inset 0 0 0 .5px rgba(255, 255, 255, .2),
+    0 0 16px -5px var(--tile-accent, #d8ff6a);
+}
+/* Mid tier keeps the glass read — the glint and the bevel carry it — but
+   drops the extra sheen layers and the per-cell bloom, the parts that cost
+   the most to paint across a few hundred cells. */
+html[data-tier="mid"] .ir-tile {
+  background-image:
+    radial-gradient(130% 100% at 24% 10%, rgba(255, 255, 255, .8) 0%, rgba(255, 255, 255, .28) 16%, rgba(255, 255, 255, 0) 48%),
+    linear-gradient(180deg, rgba(255, 255, 255, .26) 0%, rgba(6, 5, 14, .34) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .68),
+    inset 0 -1px 0 rgba(0, 0, 0, .4),
+    inset 0 0 0 .5px rgba(255, 255, 255, .2);
+}
+/* Weak devices drop the outer bloom and the specular stack — the bevel and
+   the edge highlights alone still read as glass. */
+html[data-tier="low"] .ir-tile {
+  border-radius: 2px;
+  background-image:
+    linear-gradient(150deg, rgba(255, 255, 255, .5) 0%, rgba(255, 255, 255, .04) 40%, rgba(255, 255, 255, 0) 55%),
+    linear-gradient(180deg, rgba(255, 255, 255, .24) 0%, rgba(6, 5, 14, .32) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .6), inset 0 -1px 0 rgba(0, 0, 0, .35);
 }
 
 .ir-stage {
@@ -1087,8 +1126,14 @@ html[data-anim-fallback='static'] .initial-reveal { display: none; }
   height: min(62vmin, 600px);
   margin: auto;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(216, 255, 106, .4), rgba(155, 138, 255, .22) 38%, transparent 68%);
-  filter: blur(30px);
+  /* Falloff carries the diffusion — no live blur pass during the intro, which
+     is what keeps the entrance smooth on phones. */
+  background: radial-gradient(circle,
+    rgba(216, 255, 106, .4) 0%,
+    rgba(216, 255, 106, .26) 18%,
+    rgba(155, 138, 255, .22) 40%,
+    rgba(155, 138, 255, .09) 56%,
+    transparent 72%);
   mix-blend-mode: screen;
 }
 /* Breathing pupil — its own layer so the CSS animation never fights the
@@ -3333,11 +3378,20 @@ html[data-anim-fallback='static'] .pop-word { will-change: auto; }
   z-index: 39;
   pointer-events: none;
   opacity: .035;
+  /* Film grain as a blended overlay only where it is cheap: `overlay` makes
+     the compositor re-blend the full-screen layer whenever content under it
+     changes, i.e. on every scroll frame. Touch + mid tier keep the grain but
+     drop the blend (see the tier rules below). */
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");
   background-repeat: repeat;
   mix-blend-mode: overlay;
 }
 [data-tier="low"] body::after { display: none; }
+.is-touch[data-theme="dark"] body::after,
+[data-tier="mid"][data-theme="dark"] body::after {
+  opacity: .028;
+  mix-blend-mode: normal;
+}
 
 /* Ambient gradient orbs — floating background glows that make the
    dark surface feel alive. Two orbs, blurred and blended, animated
@@ -3351,10 +3405,15 @@ html[data-anim-fallback='static'] .pop-word { will-change: auto; }
   width: 70vw;
   height: 70vh;
   pointer-events: none;
-  opacity: .35;
-  background: radial-gradient(ellipse at 30% 40%, rgba(155, 138, 255, .15), transparent 60%),
-              radial-gradient(ellipse at 70% 60%, rgba(216, 255, 106, .08), transparent 50%);
-  filter: blur(80px);
+  opacity: .38;
+  /* Soft by construction: the layered radial gradients do the diffusion, so
+     this layer never needs a live 80 px blur pass. A filtered element has to
+     re-render that blur on every frame the orbs drift — the single most
+     expensive effect running on phones. Gradient falloff is static, and the
+     drift is a pure composited transform. */
+  background:
+    radial-gradient(ellipse 62% 62% at 30% 40%, rgba(155, 138, 255, .2), rgba(155, 138, 255, .07) 40%, transparent 74%),
+    radial-gradient(ellipse 56% 56% at 70% 60%, rgba(216, 255, 106, .1), rgba(216, 255, 106, .03) 44%, transparent 76%);
   animation: dark-orb-drift 25s ease-in-out infinite alternate;
 }
 @keyframes dark-orb-drift {
@@ -3970,22 +4029,17 @@ html[data-anim-fallback='static'] .pop-word { will-change: auto; }
 }
 
 .processing-progress-fill {
-  width: 40%;
+  width: 30%;
   height: 100%;
   background: var(--lime);
   border-radius: 999px;
   animation: progressMove 1.5s ease-in-out infinite alternate;
 }
 
+/* Transform-only sweep (animating `width` forces layout every frame). */
 @keyframes progressMove {
-  from {
-    transform: translateX(-100%);
-    width: 30%;
-  }
-  to {
-    transform: translateX(300%);
-    width: 60%;
-  }
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(333%); }
 }
 
 

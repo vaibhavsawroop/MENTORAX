@@ -136,8 +136,68 @@ text invisible.
   CSS override (no inline surgery).
 - Emulated mid-range Android (4 cores / 4 GB, touch) → `data-tier="mid"`,
   no Clouds contexts, Lenis off, native fling scroll.
+- Entrance probe: load `/?intro=1` → `.ir-tile` cells exist (count ≤ 420),
+  the progress rail ends at `scaleX(1)`, the counter reads `100`, and the
+  overlay is unmounted while `performance.now()` is still ≈ 3 s.
+  `?intro=1` replays the sequence on demand without touching session state.
 
-## 7. Dark mode polish layer
+## 7. First-visit entrance reveal (`src/components/InitialReveal.tsx`)
+
+The pixel-Swiss neon intro, played once per session (or whenever `?intro=1`
+is on the URL):
+
+- **One GSAP timeline** drives every phase — frame/HUD boot, a centre-out
+  pixel wave, the neon wordmark burn-in (blur-to-sharp, chromatic ghosts via
+  `attr(data-text)` pseudo-elements, an infinite shine that is deliberately a
+  *standalone* tween, since an infinite repeat inside a timeline would make
+  `onComplete` unreachable), a CRT re-sync jolt with an inward ripple, a scan
+  sweep, then the doors: backdrop fade, centre-out pixel collapse, flare.
+- **Cost control** — cells are built imperatively (React nodes would be pure
+  render cost for a ~2.8 s overlay), sized from the device tier and capped at
+  420. Only `transform`/`opacity` animate (colours are static per cell), the
+  single blur is skipped on `low`, and the grain/vignette/scanline/ghost
+  layers are paint-once CSS.
+- **Never traps the page** — a `setTimeout` guard force-finishes the overlay
+  if the ticker stalls, and `html[data-anim-fallback="static"]` hides it
+  outright. Both routes end in the same cleanup.
+- **Choreography handshake** — the timeline dispatches
+  `mentorax:entrance-done` as the doors open; `HeroShader` listens for it
+  (with a fallback timer) so the rocket launches through the gap instead of
+  racing a hardcoded delay.
+- Reduced motion skips the scenery and gets a short fade of the lockup.
+
+## 8. Asset + render budget
+
+Fast loading and a quiet GPU on every device:
+
+- **Images** — every in-page asset is WebP: mentor portraits 1.9 MB → 162 KB,
+  batch banners 946 KB → 265 KB, the logo mark 82 KB → 2 KB (the 1024 px PNG
+  stays only as the favicon), and the dark rocket is a downscaled 800 px WebP
+  (157 KB → 78 KB). Below-the-fold portraits/banners carry
+  `loading="lazy" decoding="async"`, so they are never part of first paint.
+- **One rocket, not two** — `HeroShader` renders only the illustration the
+  current theme shows. A `display: none` image is still downloaded, so
+  shipping both used to cost every visitor an unseen 31–77 KB.
+- **Fonts** — the Google Fonts request asks only for the faces the design
+  uses (no italics: `em, i` are `font-style: normal`; no unused Syne 500), and
+  `--mono` names `JetBrains Mono` — the family that is actually loaded. It used
+  to name Space Mono, which was never fetched, so every mono label silently
+  fell back to the system monospace while an unused italic was downloaded.
+- **No live blur** — the dark-mode ambient orbs dropped `filter: blur(80px)`;
+  the gradient falloff now does the diffusion, which removes a full-screen
+  blur pass from every drifting frame. Same for the entrance halo.
+- **Compositor-only keyframes** — the hero scanline rides `transform`
+  (was animating `left`) and the checkout progress sweep rides `transform`
+  (was animating `width`): neither re-runs layout any more.
+- **Film grain** keeps its `overlay` blend on capable desktops but drops it on
+  touch and `mid` tier — a blended full-screen layer is re-composited on every
+  scroll frame, which quietly costs phones a lot.
+- **Theme before first paint** — `main.tsx` stamps `data-theme` (saved choice
+  or system preference) before React mounts, so dark-mode visitors no longer
+  see one frame of the light theme, and the hero can pick its rocket
+  illustration on the first render.
+
+## 9. Dark mode polish layer
 
 Dark mode is not just inverted `--paper`:
 

@@ -21,7 +21,11 @@
  * • A timer guard force-finishes the overlay if requestAnimationFrame never
  *   fires (throttled webviews) so the site can never stay covered.
  * • When the doors open, `mentorax:entrance-done` is dispatched on `window`
- *   — the hero rocket launches off that event instead of a guessed delay.
+ *   and `data-entrance` is cleared from <html>; the hero rocket watches that
+ *   attribute on the animation frame, so the launch can't be missed.
+ *
+ * Plays once per session; add `?intro=1` to any URL to replay it on demand
+ * (handy for QA and for showing the entrance off).
  *
  * All styling lives in styles.css (`.initial-reveal`, `.ir-*`).
  */
@@ -47,14 +51,19 @@ function pickAccent() {
   return PALETTE[0][0]
 }
 
-/** Hard cap on tile count — each one is its own compositor layer. */
-const MAX_CELLS = 420
+/** Hard cap on tile count — each cell carries gradients, a bevel and its own
+ *  compositor layer, so even a 4K screen gets a bounded grid. */
+const MAX_CELLS = 360
+
+function shouldPlay() {
+  if (typeof window === 'undefined') return false
+  // `?intro=1` replays the entrance without touching the session flag.
+  if (new URLSearchParams(window.location.search).has('intro')) return true
+  return !sessionStorage.getItem('mentorax-revealed')
+}
 
 export function InitialReveal() {
-  const [active, setActive] = useState(() => {
-    if (typeof window === 'undefined') return false
-    return !sessionStorage.getItem('mentorax-revealed')
-  })
+  const [active, setActive] = useState(shouldPlay)
   const wrapperRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -103,7 +112,9 @@ export function InitialReveal() {
       for (let i = 0; i < cols * rows; i++) {
         const tile = document.createElement('span')
         tile.className = 'ir-tile'
-        tile.style.backgroundColor = pickAccent()
+        // The accent rides a custom property so the glass composition (sheen,
+        // bevel, glow) stays in CSS and can be trimmed per device tier.
+        tile.style.setProperty('--tile-accent', pickAccent())
         fragment.appendChild(tile)
       }
       tilesEl.appendChild(fragment)
@@ -151,7 +162,7 @@ export function InitialReveal() {
         ease: 'power2.out',
         stagger: { amount: .55, grid, from: 'center' },
       }, .22)
-        .to(tiles, { opacity: .12, duration: .5, ease: 'power2.inOut' }, .85)
+        .to(tiles, { opacity: .16, duration: .5, ease: 'power2.inOut' }, .85)
 
       /* 3 — The lockup burns in: halo bloom, blur-to-sharp, tracking settle. */
       const lockupFrom = { opacity: 0, scale: .86, ...(rich ? { filter: 'blur(24px)' } : {}) }
@@ -162,8 +173,17 @@ export function InitialReveal() {
         .fromTo('.ir-tagline',
           { opacity: 0, y: 14, letterSpacing: '.62em' },
           { opacity: 1, y: 0, letterSpacing: '.32em', duration: .6 }, .85)
-        // Endless shine running across the neon letters.
-        .to('.ir-wordmark', { backgroundPosition: '200% center', duration: 2.4, ease: 'none', repeat: -1 }, .9)
+
+      // Endless shine across the neon letters — deliberately a standalone
+      // tween: an infinite repeat inside the timeline would make its
+      // duration infinite and onComplete would never fire.
+      gsap.to('.ir-wordmark', {
+        backgroundPosition: '200% center',
+        duration: 2.4,
+        ease: 'none',
+        repeat: -1,
+        delay: .9,
+      })
 
       if (rich) {
         /* 4 — CRT-style re-sync: the lockup jolts, then a ripple runs inward. */
@@ -184,7 +204,7 @@ export function InitialReveal() {
             ease: 'power2.out',
             stagger: { amount: .45, grid, from: 'edges' },
           }, 1.2)
-          .to(tiles, { opacity: .12, duration: .45, ease: 'power2.inOut' }, 1.75)
+          .to(tiles, { opacity: .16, duration: .45, ease: 'power2.inOut' }, 1.75)
       }
 
       /* 5 — Scan sweep: a neon bar travels the frame. */
@@ -248,7 +268,7 @@ export function InitialReveal() {
       <div className="ir-stage">
         <div className="ir-halo" />
         <div className="ir-lockup">
-          <img className="ir-mark" src="/logo.png" alt="" decoding="async" />
+          <img className="ir-mark" src="/logo-mark.webp" alt="" decoding="async" />
           <span className="ir-wordmark" data-text="mentorax">
             mentora<span className="ir-x">x</span>
           </span>

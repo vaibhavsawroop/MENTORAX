@@ -155,6 +155,8 @@ export function HoverMember({
                 alt={member.name}
                 className="hover-member-avatar-img"
                 draggable={false}
+                loading="lazy"
+                decoding="async"
               />
             ) : (
               <div className="hover-member-avatar-placeholder">

@@ -13,7 +13,10 @@
     <meta property="og:url" content="https://mentoraxs.com" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400..800;1,400..800&family=JetBrains+Mono:ital,wght@0,400;0,500;1,400&family=Syne:wght@500;700;800&display=swap" rel="stylesheet" />
+    <!-- Only the weights the design actually uses are requested: no italics
+         (`em, i` are styled `font-style: normal`), no unused Syne 500.
+         Fewer faces = fewer blocking font requests on first paint. -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400..800&family=JetBrains+Mono:wght@400;500&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
     <title>MentoraX | IAT 2027 Mentorship — mentoraxs.com</title>
   </head>
   <body>
