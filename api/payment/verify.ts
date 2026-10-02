@@ -142,7 +142,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               </div>
 
               <div style="color: #a8a3bb; font-size: 12px; text-align: center; line-height: 1.5;">
-                For any queries, please write to <a href="mailto:support@mentoraxs.com" style="color: #9b8aff;">support@mentoraxs.com</a>.<br>
+                For any queries, please reply directly to this email or write to <a href="mailto:managementrajiiserit@gmail.com" style="color: #9b8aff;">managementrajiiserit@gmail.com</a>.<br>
                 MentoraX · Science of a clear path.
               </div>
             </div>
@@ -187,7 +187,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               </div>
 
               <div style="color: #a8a3bb; font-size: 12px; text-align: center; line-height: 1.5;">
-                For any queries, please write to <a href="mailto:support@mentoraxs.com" style="color: #9b8aff;">support@mentoraxs.com</a>.<br>
+                For any queries, please write to <a href="mailto:managementrajiiserit@gmail.com" style="color: #9b8aff;">managementrajiiserit@gmail.com</a>.<br>
                 MentoraX · Science of a clear path.
               </div>
             </div>

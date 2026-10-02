@@ -105,7 +105,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   } catch (err: unknown) {
     console.error('Contact API Error:', err)
     return res.status(500).json({
-      error: 'Failed to process enquiry. Please write directly to managementrajiiserit@gmail.com or support@mentoraxs.com',
+      error: 'Failed to process enquiry. Please write directly to managementrajiiserit@gmail.com',
     })
   }
 }

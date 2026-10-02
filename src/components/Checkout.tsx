@@ -352,11 +352,11 @@ export function CheckoutContent({
               setStep('receipt')
               triggerConfetti()
             } else {
-              alert('Payment verification failed. Please contact support@mentoraxs.com')
+              alert('Payment verification failed. Please contact managementrajiiserit@gmail.com')
               setStep('form')
             }
           } catch {
-            alert('Could not verify payment. Please contact support@mentoraxs.com with your payment ID: ' + response.razorpay_payment_id)
+            alert('Could not verify payment. Please contact managementrajiiserit@gmail.com with your payment ID: ' + response.razorpay_payment_id)
             setStep('form')
           }
         },
