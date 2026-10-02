@@ -261,31 +261,55 @@ function HeroShader() {
     if (!rocketRef.current) return
     const el = rocketRef.current
     
-    if (reducedMotion) {
-      gsap.set(el, { opacity: 1, x: 0, y: 0, rotation: 0, scale: 1 })
-      return
-    }
-    
-    // Parabolic flight effect: we separate X and Y eases for the curve
-    gsap.set(el, { opacity: 0, x: -120, y: 120, rotation: -12, scale: 0.85 })
-    
-    // Fade and Rotate
-    gsap.to(el, { opacity: 1, rotation: 0, scale: 1, duration: 1.4, ease: "power2.out", delay: 0.1 })
-    
-    // The Parabolic Curve: X moves linearly/slightly eased, Y uses strong ease out
-    gsap.to(el, { x: 0, duration: 1.4, ease: "power1.out", delay: 0.1 })
-    gsap.to(el, { y: 0, duration: 1.4, ease: "back.out(1.2)", delay: 0.1 })
-    
-    // Subtle floating loop after landing
-    gsap.to(el, {
-      y: "-=8",
-      duration: 2.5,
-      ease: "sine.inOut",
-      yoyo: true,
-      repeat: -1,
-      delay: 1.5
+    let ctx = gsap.context(() => {
+      const animateRocket = () => {
+        if (reducedMotion) {
+          gsap.set(el, { opacity: 1, x: 0, y: 0, rotation: 0, scale: 1 })
+          return
+        }
+        
+        // Kill existing animations before restarting
+        gsap.killTweensOf(el)
+        
+        // Parabolic flight effect
+        gsap.set(el, { opacity: 0, x: -120, y: 120, rotation: -12, scale: 0.85 })
+        
+        // Fade and Rotate
+        gsap.to(el, { opacity: 1, rotation: 0, scale: 1, duration: 1.4, ease: "power2.out", delay: 0.1 })
+        
+        // The Parabolic Curve
+        gsap.to(el, { x: 0, duration: 1.4, ease: "power1.out", delay: 0.1 })
+        gsap.to(el, { y: 0, duration: 1.4, ease: "back.out(1.2)", delay: 0.1 })
+        
+        // Subtle floating loop after landing
+        gsap.to(el, {
+          y: "-=8",
+          duration: 2.5,
+          ease: "sine.inOut",
+          yoyo: true,
+          repeat: -1,
+          delay: 1.5
+        })
+      }
+
+      // Run on mount
+      animateRocket()
+
+      // Watch for theme changes to run the flight again
+      const observer = new MutationObserver((mutations) => {
+        for (const m of mutations) {
+          if (m.attributeName === 'data-theme') {
+            animateRocket()
+          }
+        }
+      })
+      observer.observe(document.documentElement, { attributes: true })
+
+      return () => observer.disconnect()
     })
-  }, [])
+    
+    return () => ctx.revert()
+  }, [reducedMotion])
 
   return (
     <>
