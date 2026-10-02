@@ -2389,8 +2389,8 @@ html.lenis, html.lenis body {
   --stars-color: #fff;
   --clouds-color: #F3FDFF;
   --back-clouds-color: #AACADF;
-  --transition: .5s cubic-bezier(0, -0.02, 0.4, 1.25);
-  --circle-transition: .3s cubic-bezier(0, -0.02, 0.35, 1.17);
+  --transition: 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+  --circle-transition: 1s cubic-bezier(0.22, 1, 0.36, 1);
   display: inline-flex;
   align-items: center;
   flex-shrink: 0;
@@ -2995,11 +2995,11 @@ html.theming *,
 html.theming *::before,
 html.theming *::after {
   transition:
-    background-color .5s ease,
-    color .5s ease,
-    border-color .5s ease,
-    box-shadow .5s ease,
-    fill .5s ease !important;
+    background-color 1.2s cubic-bezier(0.22, 1, 0.36, 1),
+    color 1.2s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 1.2s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 1.2s cubic-bezier(0.22, 1, 0.36, 1),
+    fill 1.2s cubic-bezier(0.22, 1, 0.36, 1) !important;
 }
 
 /* ── Static fallback for rAF-dead webviews ──────────────────────

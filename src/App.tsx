@@ -271,24 +271,24 @@ function HeroShader() {
         // Kill existing animations before restarting
         gsap.killTweensOf(el)
         
-        // Parabolic flight effect
-        gsap.set(el, { opacity: 0, x: -120, y: 120, rotation: -12, scale: 0.85 })
+        // Parabolic flight effect: Start further inside (more left/down) so it's fully visible
+        gsap.set(el, { opacity: 0, x: -280, y: 200, rotation: -18, scale: 0.7 })
         
-        // Fade and Rotate
-        gsap.to(el, { opacity: 1, rotation: 0, scale: 1, duration: 1.4, ease: "power2.out", delay: 0.1 })
+        // Fade, Scale and Rotate (Buttery smooth)
+        gsap.to(el, { opacity: 1, rotation: 0, scale: 1, duration: 1.8, ease: "power3.out", delay: 0.15 })
         
-        // The Parabolic Curve
-        gsap.to(el, { x: 0, duration: 1.4, ease: "power1.out", delay: 0.1 })
-        gsap.to(el, { y: 0, duration: 1.4, ease: "back.out(1.2)", delay: 0.1 })
+        // The Parabolic Curve (Longer duration, smoother eases)
+        gsap.to(el, { x: 0, duration: 1.8, ease: "power2.out", delay: 0.15 })
+        gsap.to(el, { y: 0, duration: 1.8, ease: "back.out(1.1)", delay: 0.15 })
         
         // Subtle floating loop after landing
         gsap.to(el, {
-          y: "-=8",
-          duration: 2.5,
+          y: "-=10",
+          duration: 3,
           ease: "sine.inOut",
           yoyo: true,
           repeat: -1,
-          delay: 1.5
+          delay: 2
         })
       }
 
@@ -336,11 +336,11 @@ function ThemeSwitch() {
   useEffect(() => {
     const root = document.documentElement
 
-    // Coordinate the switch: for ~half a second every surface that paints
+    // Coordinate the switch: for 1.2s every surface that paints
     // with the theme (backgrounds, cards, lines, shadows) eases together
     // instead of snapping at different times.
     root.classList.add('theming')
-    window.setTimeout(() => root.classList.remove('theming'), 550)
+    window.setTimeout(() => root.classList.remove('theming'), 1200)
 
     // Keep the browser chrome (mobile address bar, task switcher) in sync.
     document.querySelector('meta[name="theme-color"]')
