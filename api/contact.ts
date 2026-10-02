@@ -28,7 +28,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const apiKey = process.env.RESEND_API_KEY
     const adminEmail = process.env.ADMIN_EMAIL || 'managementrajiiserit@gmail.com'
-    const fromEmail = process.env.FROM_EMAIL || 'MentoraX <enquiries@mentorax.in>'
+    const fromEmail = process.env.CONTACT_FROM_EMAIL || process.env.FROM_EMAIL || 'MentoraX Support <support@mentoraxs.com>'
 
     if (apiKey) {
       const resend = new Resend(apiKey)
@@ -61,7 +61,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             </div>
 
             <div style="margin-top: 28px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.1); color: #a8a3bb; font-size: 12px; text-align: center;">
-              MentoraX · Science of a clear path · <a href="https://mentorax.in" style="color: #9b8aff;">mentorax.in</a>
+              MentoraX · Science of a clear path · <a href="https://mentoraxs.com" style="color: #9b8aff;">mentoraxs.com</a>
             </div>
           </div>
         `,
@@ -79,7 +79,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             <p style="font-size: 15px; line-height: 1.6; color: #a8a3bb;">Our team (Raj & Dipti) reviews each message personally and will get back to you within 24 hours.</p>
             <div style="background: rgba(155,138,255,0.08); padding: 14px 18px; border-radius: 8px; margin: 20px 0; border: 1px solid rgba(155,138,255,0.2);">
               <p style="margin: 0; color: #9b8aff; font-size: 14px; font-weight: 500;">Need immediate assistance?</p>
-              <p style="margin: 4px 0 0; color: #f4f1ec; font-size: 13px;">Feel free to reply directly to this email or write to <a href="mailto:support@mentorax.in" style="color: #d8ff6a;">support@mentorax.in</a>.</p>
+              <p style="margin: 4px 0 0; color: #f4f1ec; font-size: 13px;">Feel free to reply directly to this email or write to <a href="mailto:support@mentoraxs.com" style="color: #d8ff6a;">support@mentoraxs.com</a>.</p>
             </div>
             <p style="margin-top: 24px; color: #a8a3bb; font-size: 13px;">Warm regards,<br><strong style="color: #f4f1ec;">The MentoraX Team</strong><br><em>Research & Development Mindset</em></p>
           </div>
@@ -104,7 +104,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   } catch (err: unknown) {
     console.error('Contact API Error:', err)
     return res.status(500).json({
-      error: 'Failed to process enquiry. Please write directly to managementrajiiserit@gmail.com or support@mentorax.in',
+      error: 'Failed to process enquiry. Please write directly to managementrajiiserit@gmail.com or support@mentoraxs.com',
     })
   }
 }
