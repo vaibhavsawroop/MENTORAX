@@ -71,15 +71,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       await resend.emails.send({
         from: fromEmail,
         to: [email],
+        replyTo: adminEmail,
         subject: `We've received your enquiry · MentoraX`,
         html: `
           <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; background: #0c0b16; color: #f4f1ec; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
             <h2 style="margin: 0 0 12px; color: #d8ff6a;">Hello ${name},</h2>
             <p style="font-size: 15px; line-height: 1.6; color: #f4f1ec;">Thank you for reaching out to MentoraX. We've received your enquiry regarding <strong>${interest || 'our programs'}</strong> for ${exam ? `<strong>${exam}</strong>` : 'your preparation'}.</p>
-            <p style="font-size: 15px; line-height: 1.6; color: #a8a3bb;">Our team (Raj & Dipti) reviews each message personally and will get back to you within 24 hours.</p>
+            <p style="font-size: 15px; line-height: 1.6; color: #a8a3bb;">Our team will review your message and will get back to you soon.</p>
             <div style="background: rgba(155,138,255,0.08); padding: 14px 18px; border-radius: 8px; margin: 20px 0; border: 1px solid rgba(155,138,255,0.2);">
               <p style="margin: 0; color: #9b8aff; font-size: 14px; font-weight: 500;">Need immediate assistance?</p>
-              <p style="margin: 4px 0 0; color: #f4f1ec; font-size: 13px;">Feel free to reply directly to this email or write to <a href="mailto:support@mentoraxs.com" style="color: #d8ff6a;">support@mentoraxs.com</a>.</p>
+              <p style="margin: 4px 0 0; color: #f4f1ec; font-size: 13px;">Feel free to reply directly to this email or write to <a href="mailto:${adminEmail}" style="color: #d8ff6a;">${adminEmail}</a>.</p>
             </div>
             <p style="margin-top: 24px; color: #a8a3bb; font-size: 13px;">Warm regards,<br><strong style="color: #f4f1ec;">The MentoraX Team</strong><br><em>Research & Development Mindset</em></p>
           </div>
