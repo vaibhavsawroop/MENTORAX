@@ -274,12 +274,18 @@ function HeroShader() {
         // Parabolic flight effect: Start further inside (more left/down) so it's fully visible
         gsap.set(el, { opacity: 0, x: -280, y: 200, rotation: -18, scale: 0.7 })
         
+        let initialDelay = 0.15
+        if (typeof window !== 'undefined' && !sessionStorage.getItem('mentorax-rocket-delayed')) {
+          initialDelay = 2.4 // Wait for InitialReveal blast doors
+          sessionStorage.setItem('mentorax-rocket-delayed', 'true')
+        }
+        
         // Fade, Scale and Rotate (Buttery smooth)
-        gsap.to(el, { opacity: 1, rotation: 0, scale: 1, duration: 1.8, ease: "power3.out", delay: 0.15 })
+        gsap.to(el, { opacity: 1, rotation: 0, scale: 1, duration: 1.8, ease: "power3.out", delay: initialDelay })
         
         // The Parabolic Curve (Longer duration, smoother eases)
-        gsap.to(el, { x: 0, duration: 1.8, ease: "power2.out", delay: 0.15 })
-        gsap.to(el, { y: 0, duration: 1.8, ease: "back.out(1.1)", delay: 0.15 })
+        gsap.to(el, { x: 0, duration: 1.8, ease: "power2.out", delay: initialDelay })
+        gsap.to(el, { y: 0, duration: 1.8, ease: "back.out(1.1)", delay: initialDelay })
         
         // Subtle floating loop after landing
         gsap.to(el, {
@@ -288,7 +294,7 @@ function HeroShader() {
           ease: "sine.inOut",
           yoyo: true,
           repeat: -1,
-          delay: 2
+          delay: initialDelay + 1.85
         })
       }
 
@@ -1157,4 +1163,69 @@ function Policy({ kind, intro, sections }: { kind: string; intro: string; sectio
 
 function NotFound() { return <section className="not-found"><span>404</span><h1>This page took a different path.</h1><ArrowLink solid to="/">Return home</ArrowLink></section> }
 
-export default function App() { return <Routes><Route element={<Layout />}><Route path="/" element={<Home />} /><Route path="/mentorship" element={<Mentorship />} /><Route path="/books" element={<Books />} /><Route path="/checkout" element={<Suspense fallback={null}><CheckoutPage /></Suspense>} /><Route path="/mentors" element={<Mentors />} /><Route path="/team" element={<Team />} /><Route path="/contact" element={<Contact />} /><Route path="/refund-policy" element={<Policy kind="Refund policy" intro="A clear and considerate framework for purchase and refund conversations with MentoraX." sections={refundSections} />} /><Route path="/privacy-policy" element={<Policy kind="Privacy policy" intro="How MentoraX intends to treat the information you share with care and clarity." sections={privacySections} />} /><Route path="/terms" element={<Policy kind="Terms & conditions" intro="The shared understanding that protects the MentoraX learning environment." sections={termsSections} />} /><Route path="*" element={<NotFound />} /></Route></Routes> }
+function InitialReveal() {
+  // Only play the crazy reveal once per session so it doesn't annoy returning users
+  const [active, setActive] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return !sessionStorage.getItem('mentorax-revealed')
+  })
+
+  useEffect(() => {
+    if (active) {
+      sessionStorage.setItem('mentorax-revealed', 'true')
+      const t = setTimeout(() => setActive(false), 2400)
+      return () => clearTimeout(t)
+    }
+  }, [active])
+
+  return (
+    <AnimatePresence>
+      {active && (
+        <motion.div
+          className="initial-reveal-wrapper"
+          style={{ position: 'fixed', inset: 0, zIndex: 99999, display: 'flex', pointerEvents: 'auto' }}
+        >
+          {/* Top Blast Door */}
+          <motion.div 
+            initial={{ y: 0 }}
+            exit={{ y: "-100%", transition: { duration: 1.2, ease: [0.76, 0, 0.24, 1], delay: 0.3 } }}
+            style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: '50%', background: '#08070d', borderBottom: '1px solid rgba(216,255,106,0.1)' }} 
+          />
+          {/* Bottom Blast Door */}
+          <motion.div 
+            initial={{ y: 0 }}
+            exit={{ y: "100%", transition: { duration: 1.2, ease: [0.76, 0, 0.24, 1], delay: 0.3 } }}
+            style={{ position: 'absolute', top: '50%', left: 0, right: 0, bottom: 0, background: '#08070d', borderTop: '1px solid rgba(216,255,106,0.1)' }} 
+          />
+          
+          {/* Centered Logo & Glow */}
+          <motion.div 
+            style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}
+            initial={{ opacity: 0, scale: 0.7, filter: 'blur(20px)' }}
+            animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
+            exit={{ opacity: 0, scale: 1.15, filter: 'blur(10px)', transition: { duration: 0.5, ease: "easeIn" } }}
+            transition={{ duration: 1.5, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <div style={{ position: 'absolute', width: '300px', height: '300px', background: 'radial-gradient(circle, rgba(155,138,255,0.15) 0%, transparent 70%)', mixBlendMode: 'screen' }} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '14px', zIndex: 2 }}>
+              <img src="/logo.png" style={{ width: '48px', height: '48px', filter: 'brightness(1.5) drop-shadow(0 0 12px rgba(216,255,106,0.3))' }} alt="" />
+              <span className="wordmark" style={{ fontSize: '3rem', color: '#fff', letterSpacing: '0.02em', textShadow: '0 4px 20px rgba(0,0,0,0.5)' }}>
+                mentora<span className="wordmark-x" style={{ color: '#d8ff6a' }}>x</span>
+              </span>
+            </div>
+            <motion.div 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6, duration: 1, ease: "easeOut" }}
+              style={{ color: '#a8a3bb', fontSize: '0.85rem', marginTop: '16px', letterSpacing: '0.15em', textTransform: 'uppercase' }}
+            >
+              The Science of a Clear Path
+            </motion.div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  )
+}
+
+export default function App() { return <><InitialReveal /><Routes><Route element={<Layout />}><Route path="/" element={<Home />} /><Route path="/mentorship" element={<Mentorship />} /><Route path="/books" element={<Books />} /><Route path="/checkout" element={<Suspense fallback={null}><CheckoutPage /></Suspense>} /><Route path="/mentors" element={<Mentors />} /><Route path="/team" element={<Team />} /><Route path="/contact" element={<Contact />} /><Route path="/refund-policy" element={<Policy kind="Refund policy" intro="A clear and considerate framework for purchase and refund conversations with MentoraX." sections={refundSections} />} /><Route path="/privacy-policy" element={<Policy kind="Privacy policy" intro="How MentoraX intends to treat the information you share with care and clarity." sections={privacySections} />} /><Route path="/terms" element={<Policy kind="Terms & conditions" intro="The shared understanding that protects the MentoraX learning environment." sections={termsSections} />} /><Route path="*" element={<NotFound />} /></Route></Routes></> }
