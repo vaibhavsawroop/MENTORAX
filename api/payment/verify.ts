@@ -58,7 +58,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const keySecret = process.env.RAZORPAY_KEY_SECRET
     const apiKey = process.env.RESEND_API_KEY
     const adminEmail = process.env.ADMIN_EMAIL || 'managementrajiiserit@gmail.com'
-    const fromEmail = process.env.FROM_EMAIL || 'MentoraX Orders <orders@mentorax.in>'
+    const fromEmail = process.env.FROM_EMAIL || 'MentoraX Orders <orders@mentoraxs.com>'
 
     // ── STEP 1: Verify payment signature (CRITICAL SECURITY) ──
     let verified = false
@@ -142,7 +142,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               </div>
 
               <div style="color: #a8a3bb; font-size: 12px; text-align: center; line-height: 1.5;">
-                For any queries, please write to <a href="mailto:support@mentorax.in" style="color: #9b8aff;">support@mentorax.in</a>.<br>
+                For any queries, please write to <a href="mailto:support@mentoraxs.com" style="color: #9b8aff;">support@mentoraxs.com</a>.<br>
                 MentoraX · Science of a clear path.
               </div>
             </div>
@@ -187,7 +187,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               </div>
 
               <div style="color: #a8a3bb; font-size: 12px; text-align: center; line-height: 1.5;">
-                For any queries, please write to <a href="mailto:support@mentorax.in" style="color: #9b8aff;">support@mentorax.in</a>.<br>
+                For any queries, please write to <a href="mailto:support@mentoraxs.com" style="color: #9b8aff;">support@mentoraxs.com</a>.<br>
                 MentoraX · Science of a clear path.
               </div>
             </div>

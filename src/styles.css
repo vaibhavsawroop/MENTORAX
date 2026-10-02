@@ -973,6 +973,304 @@ em, i { font-family: inherit; font-style: normal; font-weight: inherit; }
 .team-card p { margin: 0; color: var(--ink-soft); font-size: .76rem; line-height: 1.5; }
 .team-card:nth-child(3) p, .team-card:nth-child(3) .tiny-kicker { color: rgba(255,255,255,.62); }
 
+/* ══════════════════════════════════════════════════════════════════
+   INITIAL ENTRANCE REVEAL — neon pixel-Swiss intro
+   Owned by src/components/InitialReveal.tsx: GSAP drives every phase
+   (tiles, lockup, scan, doors) while this layer owns the look. Neon
+   colour is hard-coded to the dark signal palette on purpose — the
+   entrance is always a night-mode moment, in either theme.
+   ══════════════════════════════════════════════════════════════════ */
+.initial-reveal {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  overflow: hidden;
+  isolation: isolate; /* keep blend modes inside the overlay */
+  color: #f6f3ff;
+  background: #05050b;
+  user-select: none;
+  -webkit-user-select: none;
+}
+/* A dead animation clock would strand this overlay over the page; the
+   watchdog in SmoothScroll stamps this state, so the intro removes itself. */
+html[data-anim-fallback='static'] .initial-reveal { display: none; }
+
+.ir-backdrop {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(115% 85% at 50% 40%, rgba(155, 138, 255, .22), transparent 62%),
+    radial-gradient(75% 55% at 50% 104%, rgba(216, 255, 106, .12), transparent 70%),
+    linear-gradient(158deg, #08070f 0%, #0b0a17 55%, #05050b 100%);
+}
+/* Fine Swiss rules under everything. */
+.ir-backdrop::before {
+  position: absolute;
+  inset: 0;
+  content: '';
+  background-image:
+    linear-gradient(rgba(255, 255, 255, .028) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, .028) 1px, transparent 1px);
+  background-size: 96px 96px, 96px 96px;
+}
+/* Film grain + vignette: paint-once texture with zero per-frame cost. */
+.ir-backdrop::after {
+  position: absolute;
+  inset: 0;
+  content: '';
+  opacity: .05;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");
+  box-shadow: inset 0 0 240px 70px rgba(0, 0, 0, .85);
+}
+
+/* Swiss construction frame: two rules, four registration marks. */
+.ir-frame { position: absolute; inset: 0; z-index: 1; }
+.ir-frame-line { position: absolute; }
+.ir-frame-line-v {
+  top: 0;
+  bottom: 0;
+  left: 33.333%;
+  width: 1px;
+  background: linear-gradient(180deg, transparent, rgba(216, 255, 106, .32) 22%, rgba(155, 138, 255, .28) 78%, transparent);
+}
+.ir-frame-line-h {
+  top: 66.666%;
+  right: 0;
+  left: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(155, 138, 255, .3) 30%, rgba(216, 255, 106, .26) 70%, transparent);
+}
+.ir-corner {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border: 1px solid rgba(216, 255, 106, .5);
+  box-shadow: 0 0 16px rgba(216, 255, 106, .28);
+}
+.ir-corner-tl { top: clamp(18px, 2.6vw, 38px); left: clamp(18px, 2.6vw, 38px); border-right: 0; border-bottom: 0; }
+.ir-corner-tr { top: clamp(18px, 2.6vw, 38px); right: clamp(18px, 2.6vw, 38px); border-bottom: 0; border-left: 0; }
+.ir-corner-bl { bottom: clamp(18px, 2.6vw, 38px); left: clamp(18px, 2.6vw, 38px); border-top: 0; border-right: 0; }
+.ir-corner-br { right: clamp(18px, 2.6vw, 38px); bottom: clamp(18px, 2.6vw, 38px); border-top: 0; border-left: 0; }
+
+/* Pixel grid — colours are static per cell; GSAP only touches opacity and
+   scale, so the waves stay on the compositor. */
+.ir-tiles {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: grid;
+  gap: 1px;
+}
+.ir-tile {
+  display: block;
+  opacity: 0;
+  border-radius: 1px;
+  box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .05);
+}
+
+.ir-stage {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(14px, 2.2vh, 26px);
+  pointer-events: none;
+}
+.ir-halo {
+  position: absolute;
+  inset: 0;
+  width: min(62vmin, 600px);
+  height: min(62vmin, 600px);
+  margin: auto;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(216, 255, 106, .4), rgba(155, 138, 255, .22) 38%, transparent 68%);
+  filter: blur(30px);
+  mix-blend-mode: screen;
+}
+/* Breathing pupil — its own layer so the CSS animation never fights the
+   GSAP opacity tween on .ir-halo itself. */
+.ir-halo::before {
+  position: absolute;
+  inset: -8%;
+  content: '';
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(155, 138, 255, .38), transparent 62%);
+  mix-blend-mode: screen;
+  animation: ir-pulse 2.2s ease-in-out infinite;
+}
+@keyframes ir-pulse {
+  0%, 100% { opacity: .25; transform: scale(.94); }
+  50%      { opacity: .7;  transform: scale(1.06); }
+}
+
+.ir-lockup {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  gap: clamp(12px, 1.6vw, 20px);
+  align-items: center;
+}
+.ir-mark {
+  width: clamp(40px, 6.4vw, 62px);
+  height: clamp(40px, 6.4vw, 62px);
+  object-fit: contain;
+  filter: brightness(2.1) drop-shadow(0 0 16px rgba(216, 255, 106, .7)) drop-shadow(0 0 38px rgba(155, 138, 255, .55));
+}
+.ir-wordmark {
+  position: relative;
+  display: inline-block;
+  font: 800 clamp(2.2rem, 8vw, 4.6rem)/1 var(--display);
+  letter-spacing: -.01em;
+  background: linear-gradient(100deg, #ffffff 12%, #d8ff6a 32%, #9b8aff 52%, #ffffff 72%, #d8ff6a 92%);
+  background-size: 220% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 14px rgba(216, 255, 106, .45)) drop-shadow(0 0 34px rgba(155, 138, 255, .4));
+}
+/* Chromatic ghosts that glitch on their own clock — screen-blended neon.
+   Anechoic copies of the wordmark via attr(), so no extra DOM. */
+.ir-wordmark::before,
+.ir-wordmark::after {
+  position: absolute;
+  inset: 0;
+  content: attr(data-text);
+  background: none;
+  -webkit-background-clip: border-box;
+  background-clip: border-box;
+  opacity: .5;
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+.ir-wordmark::before {
+  color: #d8ff6a;
+  animation: ir-ghost-l 1.2s ease-in-out 2 both;
+}
+.ir-wordmark::after {
+  color: #9b8aff;
+  animation: ir-ghost-r 1.2s ease-in-out 2 both;
+}
+@keyframes ir-ghost-l {
+  0%, 100% { transform: translate(-2px, 1px); }
+  18%      { transform: translate(-11px, 2px); }
+  21%      { transform: translate(-2px, 1px); }
+  54%      { transform: translate(-8px, -1px); }
+  57%      { transform: translate(-2px, 1px); }
+}
+@keyframes ir-ghost-r {
+  0%, 100% { transform: translate(2px, -1px); }
+  32%      { transform: translate(9px, -2px); }
+  35%      { transform: translate(2px, -1px); }
+  71%      { transform: translate(6px, 1px); }
+  74%      { transform: translate(2px, -1px); }
+}
+.ir-x {
+  color: transparent;
+  -webkit-text-stroke: 2px #d8ff6a;
+}
+
+.ir-tagline {
+  margin: 0;
+  font: 400 clamp(.6rem, 1.4vw, .74rem)/1.4 var(--mono);
+  letter-spacing: .32em;
+  text-transform: uppercase;
+  color: rgba(246, 243, 255, .84);
+  text-shadow: 0 0 12px rgba(216, 255, 106, .35);
+}
+.ir-progress {
+  position: relative;
+  width: min(260px, 46vw);
+  height: 2px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, .14);
+}
+.ir-progress i {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform-origin: left center;
+  background: linear-gradient(90deg, #9b8aff, #d8ff6a);
+  box-shadow: 0 0 12px rgba(216, 255, 106, .75);
+}
+
+.ir-hud {
+  position: absolute;
+  z-index: 5;
+  display: grid;
+  gap: 4px;
+  font: 400 clamp(.55rem, 1.05vw, .66rem)/1.5 var(--mono);
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: rgba(246, 243, 255, .45);
+}
+.ir-hud b {
+  font-weight: 500;
+  letter-spacing: .28em;
+  color: #f6f3ff;
+  text-shadow: 0 0 14px rgba(216, 255, 106, .35);
+}
+.ir-hud-tl { top: clamp(20px, 3vw, 42px); left: clamp(20px, 3vw, 42px); }
+.ir-hud-tr { top: clamp(20px, 3vw, 42px); right: clamp(20px, 3vw, 42px); text-align: right; }
+.ir-hud-bl { bottom: clamp(20px, 3vw, 42px); left: clamp(20px, 3vw, 42px); }
+.ir-hud-br { right: clamp(20px, 3vw, 42px); bottom: clamp(20px, 3vw, 42px); text-align: right; }
+.ir-counter {
+  color: #d8ff6a !important;
+  text-shadow: 0 0 16px rgba(216, 255, 106, .8) !important;
+}
+
+.ir-scan {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: 6;
+  height: 2px;
+  opacity: 0;
+  background: linear-gradient(90deg, transparent, #9b8aff 22%, #d8ff6a 50%, #9b8aff 78%, transparent);
+  box-shadow: 0 0 24px 6px rgba(216, 255, 106, .35), 0 0 90px 22px rgba(155, 138, 255, .25);
+}
+
+.ir-flare {
+  position: absolute;
+  inset: 0;
+  z-index: 7;
+  width: min(78vmin, 900px);
+  height: min(78vmin, 900px);
+  margin: auto;
+  border-radius: 50%;
+  opacity: 0;
+  background: radial-gradient(circle, rgba(216, 255, 106, .85), rgba(155, 138, 255, .3) 38%, transparent 70%);
+  mix-blend-mode: screen;
+}
+
+/* CRT scanlines over the whole frame — static paint, zero per-frame cost. */
+.initial-reveal::after {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  content: '';
+  pointer-events: none;
+  opacity: .5;
+  background-image: repeating-linear-gradient(rgba(0, 0, 0, .3) 0 1px, transparent 1px 3px);
+}
+
+@media (max-width: 620px) {
+  .ir-hud-tr, .ir-hud-bl { display: none; }
+  .ir-wordmark { letter-spacing: .005em; }
+  .ir-x { -webkit-text-stroke-width: 1.5px; }
+}
+
+/* Reduced motion: the fader in InitialReveal.tsx takes over — drop the
+   scenery so nothing decorates a still frame. */
+@media (prefers-reduced-motion: reduce) {
+  .ir-tiles, .ir-scan, .ir-flare { display: none; }
+  .ir-wordmark::before, .ir-wordmark::after, .ir-halo::before { animation: none; }
+}
+
 /* Branded page-change signal */
 .page-transition {
   position: fixed;

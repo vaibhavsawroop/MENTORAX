@@ -28,6 +28,7 @@ import {
 } from 'lucide-react'
 import { studentTestimonials, faqs, type Faq } from './data'
 import { PageTransition } from './components/PageTransition'
+import { InitialReveal } from './components/InitialReveal'
 import { SmoothScroll, smoothScrollTo } from './components/SmoothScroll'
 import { ScrollFX } from './components/ScrollFX'
 import { TextPop } from './components/TextReveal'
@@ -262,7 +263,7 @@ function HeroShader() {
     const el = rocketRef.current
     
     let ctx = gsap.context(() => {
-      const animateRocket = () => {
+      const animateRocket = (delay: number) => {
         if (reducedMotion) {
           gsap.set(el, { opacity: 1, x: 0, y: 0, rotation: 0, scale: 1 })
           return
@@ -274,18 +275,12 @@ function HeroShader() {
         // Parabolic flight effect: Start further inside (more left/down) so it's fully visible
         gsap.set(el, { opacity: 0, x: -280, y: 200, rotation: -18, scale: 0.7 })
         
-        let initialDelay = 0.15
-        if (typeof window !== 'undefined' && !sessionStorage.getItem('mentorax-rocket-delayed')) {
-          initialDelay = 2.4 // Wait for InitialReveal blast doors
-          sessionStorage.setItem('mentorax-rocket-delayed', 'true')
-        }
-        
         // Fade, Scale and Rotate (Buttery smooth)
-        gsap.to(el, { opacity: 1, rotation: 0, scale: 1, duration: 1.8, ease: "power3.out", delay: initialDelay })
+        gsap.to(el, { opacity: 1, rotation: 0, scale: 1, duration: 1.8, ease: "power3.out", delay })
         
         // The Parabolic Curve (Longer duration, smoother eases)
-        gsap.to(el, { x: 0, duration: 1.8, ease: "power2.out", delay: initialDelay })
-        gsap.to(el, { y: 0, duration: 1.8, ease: "back.out(1.1)", delay: initialDelay })
+        gsap.to(el, { x: 0, duration: 1.8, ease: "power2.out", delay })
+        gsap.to(el, { y: 0, duration: 1.8, ease: "back.out(1.1)", delay })
         
         // Subtle floating loop after landing
         gsap.to(el, {
@@ -294,24 +289,45 @@ function HeroShader() {
           ease: "sine.inOut",
           yoyo: true,
           repeat: -1,
-          delay: initialDelay + 1.85
+          delay: delay + 1.85
         })
       }
 
-      // Run on mount
-      animateRocket()
+      // Launch choreography: the entrance reveal dispatches
+      // `mentorax:entrance-done` the moment its doors open, so the rocket
+      // flies through the gap instead of racing a hardcoded timer. On repeat
+      // visits (no reveal) it launches immediately.
+      let launched = false
+      let fallback = 0
+      const launch = () => {
+        if (launched) return
+        launched = true
+        window.clearTimeout(fallback)
+        animateRocket(0.12)
+      }
+
+      if (document.documentElement.dataset.entrance === 'running') {
+        window.addEventListener('mentorax:entrance-done', launch, { once: true })
+        fallback = window.setTimeout(launch, 5200) // reveal guard fires at 5s
+      } else {
+        launch()
+      }
 
       // Watch for theme changes to run the flight again
       const observer = new MutationObserver((mutations) => {
         for (const m of mutations) {
           if (m.attributeName === 'data-theme') {
-            animateRocket()
+            animateRocket(0.15)
           }
         }
       })
       observer.observe(document.documentElement, { attributes: true })
 
-      return () => observer.disconnect()
+      return () => {
+        observer.disconnect()
+        window.clearTimeout(fallback)
+        window.removeEventListener('mentorax:entrance-done', launch)
+      }
     })
     
     return () => ctx.revert()
@@ -1162,134 +1178,5 @@ function Policy({ kind, intro, sections }: { kind: string; intro: string; sectio
 
 
 function NotFound() { return <section className="not-found"><span>404</span><h1>This page took a different path.</h1><ArrowLink solid to="/">Return home</ArrowLink></section> }
-
-function InitialReveal() {
-  const [active, setActive] = useState(() => {
-    if (typeof window === 'undefined') return false
-    return !sessionStorage.getItem('mentorax-revealed')
-  })
-  const containerRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (!active || !containerRef.current) return
-    
-    sessionStorage.setItem('mentorax-revealed', 'true')
-    
-    const container = containerRef.current
-    const tileContainer = container.querySelector('.tile-container') as HTMLElement
-    
-    // Create grid layout
-    const size = window.innerWidth > 768 ? 90 : 60
-    const cols = Math.ceil(window.innerWidth / size)
-    const rows = Math.ceil(window.innerHeight / size)
-    
-    tileContainer.style.gridTemplateColumns = `repeat(${cols}, 1fr)`
-    tileContainer.style.gridTemplateRows = `repeat(${rows}, 1fr)`
-    
-    const total = cols * rows
-    const accents = ['#d8ff6a', '#9b8aff', '#e8f1df', '#27463c']
-    
-    // Inject tiles directly to DOM for massive performance
-    for (let i = 0; i < total; i++) {
-      const tile = document.createElement('div')
-      tile.className = 'reveal-tile'
-      tile.style.backgroundColor = '#0c0b16'
-      tile.style.border = '0.5px solid rgba(255,255,255,0.02)'
-      tile.dataset.accent = accents[Math.floor(Math.random() * accents.length)]
-      tileContainer.appendChild(tile)
-    }
-
-    const ctx = gsap.context(() => {
-      const logoGlow = container.querySelector('.reveal-logo')
-      const tiles = container.querySelectorAll('.reveal-tile')
-
-      const tl = gsap.timeline({
-        onComplete: () => setActive(false)
-      })
-      
-      // Shiny neon material loop for the wordmark
-      gsap.to('.reveal-wordmark', {
-        backgroundPosition: '200% center',
-        duration: 3,
-        ease: 'none',
-        repeat: -1
-      })
-      
-      // Initial logo fade in
-      tl.fromTo(logoGlow, 
-        { opacity: 0, scale: 0.8, filter: 'blur(30px)' }, 
-        { opacity: 1, scale: 1, filter: 'blur(0px)', duration: 1.2, ease: "power3.out" }
-      )
-      
-      // Logo zooms in slightly and disappears
-      tl.to(logoGlow, { opacity: 0, scale: 1.15, filter: 'blur(15px)', duration: 0.5, ease: "power2.in" }, "+=0.4")
-      
-      // The crazy tile flash and shrink using exact radial distance
-      const cx = cols / 2
-      const cy = rows / 2
-      const maxDist = Math.hypot(cx, cy)
-      
-      const getDelay = (i: number) => {
-        const c = i % cols
-        const r = Math.floor(i / cols)
-        return (Math.hypot(c - cx, r - cy) / maxDist) * 1.5
-      }
-
-      // First, flash them to their accent colors instantly as the wave hits
-      tl.to(tiles, {
-        backgroundColor: (i, el) => el.dataset.accent,
-        duration: 0.1,
-        delay: getDelay
-      }, "-=0.1")
-      
-      // Immediately scale them down to 0
-      tl.to(tiles, {
-        scale: 0,
-        opacity: 0,
-        duration: 0.6,
-        ease: "power3.inOut",
-        delay: getDelay
-      }, "<0.05")
-    })
-
-    return () => ctx.revert()
-  }, [active])
-
-  if (!active) return null
-
-  return (
-    <div
-      ref={containerRef}
-      className="initial-reveal-wrapper"
-      style={{ position: 'fixed', inset: 0, zIndex: 99999, display: 'flex', pointerEvents: 'auto', background: '#0c0b16' }}
-    >
-      <div className="tile-container" style={{ position: 'absolute', inset: 0, display: 'grid', zIndex: 1 }} />
-      
-      <div 
-        className="reveal-logo"
-        style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 2, pointerEvents: 'none' }}
-      >
-        <div style={{ position: 'absolute', width: '600px', height: '600px', background: 'radial-gradient(circle, rgba(155,138,255,0.4) 0%, rgba(216,255,106,0.1) 40%, transparent 70%)', mixBlendMode: 'screen', filter: 'blur(40px)' }} />
-        <div style={{ display: 'flex', alignItems: 'center', gap: '18px', zIndex: 2 }}>
-          <img src="/logo.png" style={{ width: '64px', height: '64px', filter: 'brightness(2) drop-shadow(0 0 20px rgba(216,255,106,0.8)) drop-shadow(0 0 40px rgba(155,138,255,0.6))' }} alt="" />
-          <span className="reveal-wordmark" style={{ 
-            fontSize: '4.5rem', 
-            letterSpacing: '0.02em',
-            background: 'linear-gradient(to right, #fff 20%, #d8ff6a 40%, #9b8aff 60%, #fff 80%)',
-            backgroundSize: '200% auto',
-            color: 'transparent',
-            WebkitBackgroundClip: 'text',
-            filter: 'drop-shadow(0 0 15px rgba(216,255,106,0.5)) drop-shadow(0 0 30px rgba(155,138,255,0.5))'
-          }}>
-            mentora<span style={{ color: 'transparent', WebkitTextStroke: '2px #d8ff6a' }}>x</span>
-          </span>
-        </div>
-        <div style={{ color: '#fff', fontSize: '1.1rem', marginTop: '24px', letterSpacing: '0.3em', textTransform: 'uppercase', filter: 'drop-shadow(0 0 10px rgba(255,255,255,0.6))', fontWeight: 600 }}>
-          The Science of a Clear Path
-        </div>
-      </div>
-    </div>
-  )
-}
 
 export default function App() { return <><InitialReveal /><Routes><Route element={<Layout />}><Route path="/" element={<Home />} /><Route path="/mentorship" element={<Mentorship />} /><Route path="/books" element={<Books />} /><Route path="/checkout" element={<Suspense fallback={null}><CheckoutPage /></Suspense>} /><Route path="/mentors" element={<Mentors />} /><Route path="/team" element={<Team />} /><Route path="/contact" element={<Contact />} /><Route path="/refund-policy" element={<Policy kind="Refund policy" intro="A clear and considerate framework for purchase and refund conversations with MentoraX." sections={refundSections} />} /><Route path="/privacy-policy" element={<Policy kind="Privacy policy" intro="How MentoraX intends to treat the information you share with care and clarity." sections={privacySections} />} /><Route path="/terms" element={<Policy kind="Terms & conditions" intro="The shared understanding that protects the MentoraX learning environment." sections={termsSections} />} /><Route path="*" element={<NotFound />} /></Route></Routes></> }
