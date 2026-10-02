@@ -2504,7 +2504,7 @@ html.lenis, html.lenis body {
   bottom: -0.625em;
   left: 0.312em;
   box-shadow: 0.937em 0.312em var(--clouds-color), -0.312em -0.312em var(--back-clouds-color), 1.437em 0.375em var(--clouds-color), 0.5em -0.125em var(--back-clouds-color), 2.187em 0 var(--clouds-color), 1.25em -0.062em var(--back-clouds-color), 2.937em 0.312em var(--clouds-color), 2em -0.312em var(--back-clouds-color), 3.625em -0.062em var(--clouds-color), 2.625em 0em var(--back-clouds-color), 4.5em -0.312em var(--clouds-color), 3.375em -0.437em var(--back-clouds-color), 4.625em -1.75em 0 0.437em var(--clouds-color), 4em -0.625em var(--back-clouds-color), 4.125em -2.125em 0 0.437em var(--back-clouds-color);
-  transition: 0.5s cubic-bezier(0, -0.02, 0.4, 1.25);
+  transition: var(--transition);
 }
 
 .theme-switch__stars-container {
@@ -2991,9 +2991,9 @@ html[data-anim-fallback='static'] .cursor-glow { display: none; }
 [data-parallax], [data-drift], [data-skew] { will-change: transform; }
 
 /* ── Coordinated theme switch (html.theming, set by ThemeSwitch) ── */
-html.theming *,
-html.theming *::before,
-html.theming *::after {
+html.theming *:not(.theme-switch):not(.theme-switch *),
+html.theming *:not(.theme-switch):not(.theme-switch *)::before,
+html.theming *:not(.theme-switch):not(.theme-switch *)::after {
   transition:
     background-color 1.2s cubic-bezier(0.22, 1, 0.36, 1),
     color 1.2s cubic-bezier(0.22, 1, 0.36, 1),
