@@ -30,9 +30,10 @@ function useIsTouchDevice() {
   return isTouch
 }
 
-// Animate characters one-by-one with stagger
 function AnimatedText({ text, color }: { text: string; color: string }) {
   const chars = text.split('')
+  const isMentorax = text.toLowerCase() === 'mentorax'
+  
   return (
     <motion.span
       style={{ display: 'flex', flexWrap: 'nowrap', overflow: 'hidden', color }}
@@ -40,35 +41,38 @@ function AnimatedText({ text, color }: { text: string; color: string }) {
       animate="visible"
       exit="exit"
     >
-      {chars.map((char, i) => (
-        <motion.span
-          key={i}
-          style={{ display: 'inline-block', willChange: 'transform, opacity' }}
-          variants={{
-            hidden: { y: '110%', opacity: 0 },
-            visible: {
-              y: '0%',
-              opacity: 1,
-              transition: {
-                duration: 0.45,
-                ease: [0.22, 1, 0.36, 1],
-                delay: i * 0.022,
+      {chars.map((char, i) => {
+        // Special styling if the text is exactly MentoraX
+        const isX = isMentorax && (char === 'X' || char === 'x')
+        const charColor = isMentorax ? (isX ? '#9b8aff' : '#181722') : color
+        
+        return (
+          <motion.span
+            key={i}
+            style={{ 
+              display: 'inline-block', 
+              willChange: 'transform, opacity', 
+              color: charColor,
+              fontWeight: isX ? 700 : 'inherit'
+            }}
+            variants={{
+              hidden: { y: '110%', opacity: 0 },
+              visible: {
+                y: '0%',
+                opacity: 1,
+                transition: { duration: 0.45, ease: [0.22, 1, 0.36, 1], delay: i * 0.022 },
               },
-            },
-            exit: {
-              y: '-110%',
-              opacity: 0,
-              transition: {
-                duration: 0.3,
-                ease: [0.55, 0, 0.78, 0],
-                delay: i * 0.012,
+              exit: {
+                y: '-110%',
+                opacity: 0,
+                transition: { duration: 0.3, ease: [0.55, 0, 0.78, 0], delay: i * 0.012 },
               },
-            },
-          }}
-        >
-          {char === ' ' ? '\u00A0' : char}
-        </motion.span>
-      ))}
+            }}
+          >
+            {char === ' ' ? '\u00A0' : char}
+          </motion.span>
+        )
+      })}
     </motion.span>
   )
 }
@@ -117,8 +121,8 @@ export function HoverMember({
 
   const displayText =
     activeIndex !== null
-      ? teamMembers[activeIndex].name.toUpperCase()
-      : defaultText.toUpperCase()
+      ? teamMembers[activeIndex].name
+      : defaultText
 
   const activeColor = activeIndex !== null ? hoverTextColor : textColor
 

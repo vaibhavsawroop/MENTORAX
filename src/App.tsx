@@ -1059,7 +1059,7 @@ function Mentors() { return <><div className="page-intro-compact"><PageIntro ind
 
 // Add `image: '/images/team/<filename>.jpg'` to each entry when portrait photos are available
 const hoverTeamMembers: HoverMemberItem[] = [
-  { name: 'Raj', role: 'CEO', initials: 'R', image: '/mentors/raj.webp' },
+  { name: 'Raj', role: 'CEO & Maths Mentor', initials: 'R', image: '/mentors/raj.webp' },
   { name: 'Dipti', role: 'CMO', initials: 'D', image: '/mentors/dipti.webp' },
   { name: 'Bhavesha', role: 'Physics Mentor', initials: 'B', image: '/mentors/bhavesha.webp' },
   { name: 'Aditya Thakur', role: 'Chemistry Mentor', initials: 'AT', image: '/mentors/aditya-thakur.webp' },
@@ -1071,7 +1071,7 @@ function Team() {
     <>
       <HoverMember
         teamMembers={hoverTeamMembers}
-        defaultText="MENTORAX"
+        defaultText="mentoraX"
         backgroundColor="#fbfaf6"
         textColor="#181722"
         hoverTextColor="#181722"
