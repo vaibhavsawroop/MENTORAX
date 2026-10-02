@@ -1163,8 +1163,67 @@ function Policy({ kind, intro, sections }: { kind: string; intro: string; sectio
 
 function NotFound() { return <section className="not-found"><span>404</span><h1>This page took a different path.</h1><ArrowLink solid to="/">Return home</ArrowLink></section> }
 
+function TileGrid() {
+  const [grid, setGrid] = useState({ rows: 0, cols: 0 })
+  
+  useEffect(() => {
+    const size = window.innerWidth > 768 ? 100 : 70
+    setGrid({
+      cols: Math.ceil(window.innerWidth / size),
+      rows: Math.ceil(window.innerHeight / size)
+    })
+  }, [])
+
+  if (!grid.cols) return <div style={{ position: 'absolute', inset: 0, background: '#08070d' }} />
+
+  const tiles = []
+  const cx = grid.cols / 2
+  const cy = grid.rows / 2
+  const maxDist = Math.sqrt(cx*cx + cy*cy)
+
+  // MentoraX palette accents
+  const accents = ['#d8ff6a', '#9b8aff', '#e8f1df', '#27463c']
+
+  for (let r = 0; r < grid.rows; r++) {
+    for (let c = 0; c < grid.cols; c++) {
+      const dist = Math.sqrt(Math.pow(c - cx, 2) + Math.pow(r - cy, 2))
+      const normalizedDist = dist / maxDist
+      // Stagger from center out (circular wave)
+      const delay = 0.2 + (normalizedDist * 0.9)
+      const accent = accents[Math.floor(Math.random() * accents.length)]
+
+      tiles.push(
+        <motion.div
+          key={`${r}-${c}`}
+          initial={{ opacity: 1, scale: 1, backgroundColor: '#08070d' }}
+          exit={{ 
+            backgroundColor: ['#08070d', accent, 'transparent'],
+            scale: [1, 0.9, 0],
+            opacity: [1, 1, 0],
+            transition: { duration: 0.65, times: [0, 0.3, 1], ease: [0.76, 0, 0.24, 1], delay } 
+          }}
+          style={{
+            border: '0.5px solid rgba(255,255,255,0.02)' // subtle grid lines
+          }}
+        />
+      )
+    }
+  }
+
+  return (
+    <div style={{
+      position: 'absolute', inset: 0,
+      display: 'grid',
+      gridTemplateColumns: `repeat(${grid.cols}, 1fr)`,
+      gridTemplateRows: `repeat(${grid.rows}, 1fr)`,
+      zIndex: 0
+    }}>
+      {tiles}
+    </div>
+  )
+}
+
 function InitialReveal() {
-  // Only play the crazy reveal once per session so it doesn't annoy returning users
   const [active, setActive] = useState(() => {
     if (typeof window === 'undefined') return false
     return !sessionStorage.getItem('mentorax-revealed')
@@ -1173,7 +1232,8 @@ function InitialReveal() {
   useEffect(() => {
     if (active) {
       sessionStorage.setItem('mentorax-revealed', 'true')
-      const t = setTimeout(() => setActive(false), 2400)
+      // Wait long enough for the tile radial wave to finish (0.2 + 0.9 + 0.65 = 1.75s)
+      const t = setTimeout(() => setActive(false), 2600)
       return () => clearTimeout(t)
     }
   }, [active])
@@ -1185,25 +1245,15 @@ function InitialReveal() {
           className="initial-reveal-wrapper"
           style={{ position: 'fixed', inset: 0, zIndex: 99999, display: 'flex', pointerEvents: 'auto' }}
         >
-          {/* Top Blast Door */}
-          <motion.div 
-            initial={{ y: 0 }}
-            exit={{ y: "-100%", transition: { duration: 1.2, ease: [0.76, 0, 0.24, 1], delay: 0.3 } }}
-            style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: '50%', background: '#08070d', borderBottom: '1px solid rgba(216,255,106,0.1)' }} 
-          />
-          {/* Bottom Blast Door */}
-          <motion.div 
-            initial={{ y: 0 }}
-            exit={{ y: "100%", transition: { duration: 1.2, ease: [0.76, 0, 0.24, 1], delay: 0.3 } }}
-            style={{ position: 'absolute', top: '50%', left: 0, right: 0, bottom: 0, background: '#08070d', borderTop: '1px solid rgba(216,255,106,0.1)' }} 
-          />
+          {/* The Square Tile Grid */}
+          <TileGrid />
           
           {/* Centered Logo & Glow */}
           <motion.div 
-            style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}
+            style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 2, pointerEvents: 'none' }}
             initial={{ opacity: 0, scale: 0.7, filter: 'blur(20px)' }}
             animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
-            exit={{ opacity: 0, scale: 1.15, filter: 'blur(10px)', transition: { duration: 0.5, ease: "easeIn" } }}
+            exit={{ opacity: 0, scale: 1.15, filter: 'blur(10px)', transition: { duration: 0.4, ease: "easeIn" } }}
             transition={{ duration: 1.5, ease: [0.22, 1, 0.36, 1] }}
           >
             <div style={{ position: 'absolute', width: '300px', height: '300px', background: 'radial-gradient(circle, rgba(155,138,255,0.15) 0%, transparent 70%)', mixBlendMode: 'screen' }} />
