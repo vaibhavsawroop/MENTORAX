@@ -525,7 +525,7 @@ export const faqs: Faq[] = [
   {
     question: 'How can I contact MentoraX?',
     answer:
-      'You can contact MentoraX at support@mentorax.in.',
+      'You can contact MentoraX at support@mentoraxs.com.',
   },
 ];
 
@@ -540,9 +540,9 @@ export const contactContent = {
     privacyNote:
       'Do not share passwords, payment credentials, government ID numbers, or sensitive personal information in this form.',
   },
-  officialEmail: 'support@mentorax.in' as string | null,
+  officialEmail: 'support@mentoraxs.com' as string | null,
   socialLinks: [] as Array<{ label: string; href: string }>,
-  responseNote: 'For questions about services, purchases, privacy, or refunds, email support@mentorax.in.',
+  responseNote: 'For questions about services, purchases, privacy, or refunds, email support@mentoraxs.com.',
 } as const;
 
 export const navigation = [

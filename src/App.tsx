@@ -1123,7 +1123,7 @@ function Contact() {
         if (!fallback.ok) throw new Error('fallback failed')
         setSubmitted(true)
       } catch {
-        setError('That didn\'t go through — please email support@mentorax.in and we\'ll reply quickly.')
+        setError('That didn\'t go through — please email support@mentoraxs.com and we\'ll reply quickly.')
       }
     } finally {
       setPending(false)
@@ -1137,14 +1137,14 @@ function Contact() {
         title="Let's talk about what comes"
         italic="next."
         copy="Tell us a little about where you are, where you want to go, and what kind of support would feel most useful."
-        side="For mentorship, purchase, privacy, or refund questions, email support@mentorax.in."
+        side="For mentorship, purchase, privacy, or refund questions, email support@mentoraxs.com."
       />
       <section className="contact-layout section-pad">
         <div className="contact-aside" data-reveal="left">
           <span className="tiny-kicker">Start a conversation</span>
           <h2>Good questions<br />are a good <em>start.</em></h2>
           <p>If you are unsure which edition of MentoraX is right for you, that is exactly the kind of conversation we are here for.</p>
-           <div className="contact-method"><Mail size={17} /><span><strong>Official email</strong><br /><a href="mailto:support@mentorax.in">support@mentorax.in</a></span></div>
+           <div className="contact-method"><Mail size={17} /><span><strong>Official email</strong><br /><a href="mailto:support@mentoraxs.com">support@mentoraxs.com</a></span></div>
            <div className="contact-method"><MessageCircle size={17} /><span><strong>Policy questions</strong><br />For privacy, payment, or refund support, email us directly.</span></div>
         </div>
         <form className="contact-form" data-reveal="right" name="mentorax-enquiry" method="POST" data-netlify="true" netlify-honeypot="bot-field" onSubmit={submit}>
@@ -1207,7 +1207,7 @@ const refundSections: PolicySection[] = [
   { title: 'Session rescheduling', text: 'Students should inform us at least 24 hours before a scheduled 1-to-1 mentorship session to request a reschedule. Missed sessions without prior notice may be treated as completed.' },
   { title: 'Cancellation by MentoraX', text: 'If MentoraX cancels a session, students may choose a new session date or a refund where appropriate.' },
   { title: 'Refund processing', text: 'Approved refunds will generally be processed to the original payment method within 7–10 business days, although bank processing times may vary.' },
-  { title: 'Contact', text: 'For a refund review, email support@mentorax.in with the name used for the order, order reference, date of purchase, and a concise explanation.' },
+  { title: 'Contact', text: 'For a refund review, email support@mentoraxs.com with the name used for the order, order reference, date of purchase, and a concise explanation.' },
 ]
 const privacySections: PolicySection[] = [
   { title: 'Information we collect', text: 'When using our services we may collect your name, email, mobile number, city, educational details, and payment-related information. Payment details are processed securely through third-party payment gateways; MentoraX does not store debit or credit card information.' },
@@ -1219,7 +1219,7 @@ const privacySections: PolicySection[] = [
   { title: 'Children’s privacy', text: 'Students under 13 should not use the platform without parental supervision.' },
   { title: 'Your rights', text: 'You may request to update personal information, correct inaccurate information, or delete your account, subject to legal and business retention needs.' },
   { title: 'Data retention', text: 'Information is retained only as long as necessary for providing services, resolving disputes, complying with applicable laws, and maintaining educational records where appropriate.' },
-  { title: 'Contact', text: 'For privacy questions or requests, email support@mentorax.in.' },
+  { title: 'Contact', text: 'For privacy questions or requests, email support@mentoraxs.com.' },
 ]
 const termsSections: PolicySection[] = [
   { title: 'Welcome to MentoraX', text: 'These Terms & Conditions govern your use of our website, services, mentorship programs, study materials, mock tests, digital books, and all products offered through our platform. By accessing this website or purchasing any service, you agree to these Terms. If you do not agree, please do not use our website.' },
@@ -1235,11 +1235,11 @@ const termsSections: PolicySection[] = [
   { title: 'Limitation of liability', text: 'MentoraX shall not be liable for internet failures, device incompatibility, exam postponement, government policy changes, admission decisions, or personal academic performance.' },
   { title: 'Changes', text: 'We may modify these Terms at any time. Updated versions will be posted on this page.' },
   { title: 'Governing law', text: 'These Terms shall be governed by the laws of India.' },
-  { title: 'Contact', text: 'For questions about these Terms, email support@mentorax.in.' },
+  { title: 'Contact', text: 'For questions about these Terms, email support@mentoraxs.com.' },
 ]
 
 function Policy({ kind, intro, sections }: { kind: string; intro: string; sections: PolicySection[] }) {
-  return <><PageIntro index="Legal" eyebrow="MentoraX legal information" title={kind} copy={intro} side="Effective August 2026 · Please read this page carefully." /><section className="policy-layout section-pad"><aside data-lenis-prevent><span className="tiny-kicker">On this page</span>{sections.map(({ title }, index) => <a href={`#policy-${index}`} key={title}>{title}</a>)}</aside><article><div className="policy-notice"><strong>Effective August 2026</strong><br />These policies explain how MentoraX handles access, purchases, personal information, and participation. If you have a question, contact <a href="mailto:support@mentorax.in">support@mentorax.in</a>.</div>{sections.map(({ title, text, items }, index) => <section id={`policy-${index}`} key={title} data-reveal="up"><span>{String(index + 1).padStart(2, '0')}</span><h2>{title}</h2>{text && <p>{text}</p>}{items && <ul>{items.map(item => <li key={item}>{item}</li>)}</ul>}</section>)}</article></section></> }
+  return <><PageIntro index="Legal" eyebrow="MentoraX legal information" title={kind} copy={intro} side="Effective August 2026 · Please read this page carefully." /><section className="policy-layout section-pad"><aside data-lenis-prevent><span className="tiny-kicker">On this page</span>{sections.map(({ title }, index) => <a href={`#policy-${index}`} key={title}>{title}</a>)}</aside><article><div className="policy-notice"><strong>Effective August 2026</strong><br />These policies explain how MentoraX handles access, purchases, personal information, and participation. If you have a question, contact <a href="mailto:support@mentoraxs.com">support@mentoraxs.com</a>.</div>{sections.map(({ title, text, items }, index) => <section id={`policy-${index}`} key={title} data-reveal="up"><span>{String(index + 1).padStart(2, '0')}</span><h2>{title}</h2>{text && <p>{text}</p>}{items && <ul>{items.map(item => <li key={item}>{item}</li>)}</ul>}</section>)}</article></section></> }
 
 
 function NotFound() { return <section className="not-found"><span>404</span><h1>This page took a different path.</h1><ArrowLink solid to="/">Return home</ArrowLink></section> }
