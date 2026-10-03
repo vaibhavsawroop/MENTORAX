@@ -74,10 +74,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       } else {
         return res.status(400).json({ error: 'Invalid payment signature. Verification failed.' })
       }
-    } else if (!keySecret) {
-      // Mock/test mode only when no secrets configured
-      verified = true
     } else {
+      console.error('Missing payment verification parameters or Razorpay Secret.')
       return res.status(400).json({ error: 'Missing payment verification parameters.' })
     }
 
