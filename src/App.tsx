@@ -251,7 +251,7 @@ function Tilt({ children, className = '' }: { children: React.ReactNode; classNa
 }
 
 /** The header/footer mark. The 1024px source PNG stays in public/ for the
- *  favicon; every in-page use rides the 128px WebP (2 KB vs 82 KB). */
+ *  favicon; every in-page use rides the 128px WebP (1.4 KB vs 82 KB). */
 function Mark() { return <img className="mark" src="/logo-mark.webp" alt="MentoraX logo" decoding="async" /> }
 
 import gsap from 'gsap'

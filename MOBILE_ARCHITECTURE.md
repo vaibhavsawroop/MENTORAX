@@ -170,11 +170,17 @@ is on the URL):
 
 Fast loading and a quiet GPU on every device:
 
-- **Images** — every in-page asset is WebP: mentor portraits 1.9 MB → 162 KB,
-  batch banners 946 KB → 265 KB, the logo mark 82 KB → 2 KB (the 1024 px PNG
+- **Images** — every in-page asset is WebP: mentor portraits 1.9 MB → 133 KB,
+  batch banners 946 KB → 244 KB, the logo mark 82 KB → 1.4 KB (the 1024 px PNG
   stays only as the favicon), and the dark rocket is a downscaled 800 px WebP
-  (157 KB → 78 KB). Below-the-fold portraits/banners carry
+  (157 KB → 80 KB). Below-the-fold portraits/banners carry
   `loading="lazy" decoding="async"`, so they are never part of first paint.
+  Sources (PNG/JPG/AVIF) live in git history; regenerate the WebPs with a real
+  encoder such as `sharp`. Never run a text-mode rewrite across binaries: the
+  repo-wide `mentorax.in` domain purge (9422f00) read every image as text and
+  wrote it back, expanding each `0x0A` byte to CRLF and leaving 13 files —
+  every WebP, `logo.png`, the light rocket and both halftone JPEGs —
+  unreadable. Scripts that walk the repo must skip binaries.
 - **One rocket, not two** — `HeroShader` renders only the illustration the
   current theme shows. A `display: none` image is still downloaded, so
   shipping both used to cost every visitor an unseen 31–77 KB.

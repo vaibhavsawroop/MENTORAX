@@ -1,0 +1,13 @@
+# Binary assets must never pass through Git's eol/text handling. This repo is
+# used with core.autocrlf=true, and an unmarked binary that Git's heuristic
+# decides is "text" gets CRLF-normalised on checkout/commit — which is how
+# images here were silently corrupted before.
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.webp  binary
+*.avif  binary
+*.gif   binary
+*.ico   binary
+*.woff  binary
+*.woff2 binary
