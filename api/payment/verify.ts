@@ -20,9 +20,9 @@ const SERVER_PRODUCTS: Record<string, { name: string; priceINR: number; type: 'b
  * Update these when you create or rotate your WhatsApp groups.
  */
 const BATCH_WHATSAPP_LINKS: Record<string, string> = {
-  'genesis':  process.env.WA_LINK_GENESIS  || 'https://chat.whatsapp.com/LWhJ5KeWxl5GkwY0FKs66j',
-  'quantum':  process.env.WA_LINK_QUANTUM  || 'https://chat.whatsapp.com/LWhJ5KeWxl5GkwY0FKs66j',
-  'catalyst': process.env.WA_LINK_CATALYST || 'https://chat.whatsapp.com/LWhJ5KeWxl5GkwY0FKs66j',
+  'genesis':  process.env.WA_LINK_GENESIS  || '',
+  'quantum':  process.env.WA_LINK_QUANTUM  || '',
+  'catalyst': process.env.WA_LINK_CATALYST || '',
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
