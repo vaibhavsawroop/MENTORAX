@@ -4088,50 +4088,156 @@ html[data-anim-fallback='static'] .pop-word { will-change: auto; }
   margin: 0 auto;
 }
 
-/* Printer Hardware Dispenser */
+/* ══════════════════════════════════════════════════════════════════
+   THERMAL RECEIPT PRINTER
+   The hardware: a 58 mm desk unit with a stamped brand plate, a status
+   display, a heated slot and an output bay. Every movement is driven by the
+   GSAP feed timeline in Checkout.tsx — CSS only describes how it looks.
+   ══════════════════════════════════════════════════════════════════ */
 .printer-machine {
   position: relative;
-  width: min(440px, 94vw);
+  width: min(430px, 92vw);
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
-.printer-slot {
-  width: 100%;
-  height: 22px;
-  background: linear-gradient(180deg, #181622 0%, #0c0b14 100%);
-  border: 2px solid #2e2a44;
-  border-radius: 12px 12px 4px 4px;
-  box-shadow:
-    0 8px 24px rgba(0, 0, 0, 0.6),
-    inset 0 2px 6px rgba(0, 0, 0, 0.9);
+/* The housing the roll lives in */
+.printer-body {
   position: relative;
   z-index: 10;
+  width: 100%;
+  padding: 15px 17px 0;
+  border-radius: 20px 20px 10px 10px;
+  background: linear-gradient(180deg, #2a2740 0%, #1b1929 46%, #100f1a 100%);
+  border: 1px solid rgba(255, 255, 255, .09);
+  box-shadow:
+    0 26px 60px rgba(0, 0, 0, .55),
+    inset 0 1px 0 rgba(255, 255, 255, .10),
+    inset 0 -18px 28px rgba(0, 0, 0, .45);
+}
+
+.printer-plate {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 11px;
+}
+
+.printer-brand {
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: -.02em;
+  color: rgba(255, 255, 255, .92);
+}
+
+.printer-model {
+  font-family: var(--mono);
+  font-size: 8.5px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, .4);
+}
+
+/* Status read-out: lamp + state + feed counter */
+.printer-display {
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #08070e, #100e1c);
+  border: 1px solid rgba(255, 255, 255, .07);
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, .85);
 }
 
-.printer-slot-light {
+.printer-led {
   width: 8px;
   height: 8px;
+  flex: none;
   border-radius: 50%;
-  background: #39ff14;
-  box-shadow: 0 0 8px #39ff14;
+  background: #6b5a2a;
+  box-shadow: 0 0 6px rgba(255, 190, 60, .45);
+  transition: background .3s ease, box-shadow .3s ease;
+}
+
+.printer-machine.is-powered .printer-led { background: #ffc247; box-shadow: 0 0 10px rgba(255, 194, 71, .8); }
+.printer-machine.is-printing .printer-led { animation: printerBlink .42s steps(2, start) infinite; }
+.printer-machine.is-done .printer-led { background: #4ef07a; box-shadow: 0 0 12px rgba(78, 240, 122, .85); }
+
+@keyframes printerBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .22; }
+}
+
+.printer-status,
+.printer-feed-count {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+}
+
+.printer-status { flex: 1; color: rgba(216, 255, 106, .85); }
+.printer-feed-count { color: rgba(255, 255, 255, .48); font-variant-numeric: tabular-nums; }
+
+/* The slot the strip feeds through */
+.printer-slot {
+  position: relative;
+  width: 100%;
+  height: 16px;
+  margin-top: 12px;
+  overflow: hidden;
+  border-radius: 8px 8px 3px 3px;
+  background: linear-gradient(180deg, #040308 0%, #131120 55%, #0a0912 100%);
+  border: 1px solid rgba(255, 255, 255, .08);
+  box-shadow: inset 0 3px 8px rgba(0, 0, 0, .95), 0 6px 18px rgba(0, 0, 0, .5);
+}
+
+.printer-slot-glow {
   position: absolute;
-  right: 16px;
-  animation: pulseLight 1s infinite alternate;
+  left: 0;
+  right: 0;
+  bottom: -6px;
+  height: 12px;
+  opacity: .45;
+  background: radial-gradient(60% 100% at 50% 0%, rgba(216, 255, 106, .6), transparent 70%);
 }
 
-@keyframes pulseLight {
-  from { opacity: 0.4; }
-  to { opacity: 1; }
+.printer-machine.is-printing .printer-slot-glow {
+  opacity: 1;
+  animation: printerHeat 1.1s ease-in-out infinite alternate;
 }
 
-/* The Sliding Paper */
+@keyframes printerHeat {
+  from { filter: brightness(.75); }
+  to { filter: brightness(1.4); }
+}
+
+/* Output bay: the strip hangs here and the heat line trails the print edge */
+.printer-output {
+  position: relative;
+  width: 100%;
+}
+
+.printer-heat-line {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  top: 0;
+  height: 18px;
+  opacity: 0;
+  pointer-events: none;
+  filter: blur(3px);
+  background: linear-gradient(180deg, rgba(216, 255, 106, .5), rgba(216, 255, 106, 0));
+}
+
+/* The strip itself — clipped by GSAP to reveal it as it feeds */
 .receipt-paper {
   width: calc(100% - 20px);
+  margin: 0 auto;
   background: #faf8f2;
   color: #12101e;
   box-shadow:
@@ -4143,6 +4249,93 @@ html[data-anim-fallback='static'] .pop-word { will-change: auto; }
   margin-top: -6px;
   border-left: 1px solid #e0ded4;
   border-right: 1px solid #e0ded4;
+  /* Nothing is visible until the run starts; GSAP animates this inset. */
+  clip-path: inset(0 0 100% 0);
+  will-change: clip-path;
+}
+
+/* ── Status chips above the printer ─────────────────────────────── */
+.receipt-status-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin: 0 0 20px;
+  max-width: 560px;
+}
+
+.receipt-status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 13px;
+  border-radius: 999px;
+  font: 500 10.5px/1 var(--mono);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.receipt-status-chip.ok { color: #b9ffcd; background: rgba(78, 240, 122, .10); border: 1px solid rgba(78, 240, 122, .32); }
+.receipt-status-chip.warn { color: #ffd79a; background: rgba(255, 194, 71, .10); border: 1px solid rgba(255, 194, 71, .32); }
+
+/* ── Honest failure banner in the checkout form ─────────────────── */
+.checkout-alert {
+  display: flex;
+  gap: 12px;
+  padding: 15px 17px;
+  margin-bottom: 22px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 145, 120, .45);
+  background: linear-gradient(180deg, rgba(255, 145, 120, .13), rgba(255, 145, 120, .05));
+  color: var(--ink);
+}
+
+.checkout-alert-icon { flex: none; margin-top: 2px; color: #ff9178; }
+.checkout-alert-body { display: flex; flex-direction: column; gap: 6px; }
+.checkout-alert-body strong { font-size: .95rem; }
+.checkout-alert-body p { margin: 0; font-size: .82rem; line-height: 1.55; color: var(--ink-soft); }
+
+.checkout-alert-copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  align-self: flex-start;
+  padding: 6px 11px;
+  border: 1px dashed rgba(255, 255, 255, .28);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, .18);
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: .72rem;
+  letter-spacing: .04em;
+  cursor: pointer;
+}
+
+.checkout-alert-links { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 4px; }
+.checkout-alert-links a,
+.checkout-alert-links button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #ffb59f;
+  font-size: .78rem;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* Verification state reuses the processing view with a calmer accent */
+.processing-spinner.verifying { color: #9b8aff; }
+.spin-icon.slow { animation-duration: 1.6s; }
+.processing-progress-fill.verifying {
+  background: linear-gradient(90deg, #9b8aff, #d8ff6a);
+  animation-duration: 2.4s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .receipt-paper { clip-path: none !important; }
+  .printer-heat-line { display: none; }
+  .printer-machine.is-printing .printer-led { animation: none; }
 }
 
 /* Serrated edges on top & bottom */
@@ -4822,3 +5015,266 @@ html[data-anim-fallback='static'] .pop-word { will-change: auto; }
 }
 
 
+
+/* ══════════════════════════════════════════════════════════════════
+   BOOK COVERS — real artwork on the 3D book object
+   The CSS-drawn covers were placeholders; both books now render their
+   supplied print covers. `--cover-ratio` (set per book in App.tsx) keeps
+   the cover face and the page slab the same shape, so nothing is ever
+   stretched or cropped.
+   ══════════════════════════════════════════════════════════════════ */
+.book-cover.has-art {
+  height: auto;
+  padding: 0;
+  aspect-ratio: var(--cover-ratio, 205 / 300);
+  background: #14121f;
+  box-shadow: -14px 19px 26px rgba(23, 21, 38, .30), inset 4px 0 rgba(255, 255, 255, .14);
+}
+
+.book-cover.has-art > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* The decorative ring belongs to the typographic placeholder cover only */
+.book-cover.has-art::after { display: none; }
+
+.book-pages {
+  height: auto;
+  aspect-ratio: var(--cover-ratio, 205 / 300);
+}
+
+/* Home sculpture: covers instead of big letters */
+.book-shape.has-art {
+  padding: 0;
+  background: #14121f;
+}
+
+.book-shape.has-art > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Books hero: the real cover sits inside the floating card */
+.books-hero-card.has-art {
+  padding: 0;
+  background: #14121f;
+}
+
+.books-hero-card.has-art::before { display: none; }
+
+.books-hero-cover {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.books-hero-card.has-art > b {
+  right: 14px;
+  bottom: 14px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(10, 9, 18, .74);
+  /* The cover card is dark in both themes, so the price uses the bright lime
+     (#3d8b1e — light theme's --lime — would be unreadable on it). */
+  color: var(--lime-bg);
+  font: 600 .72rem var(--mono);
+  letter-spacing: .04em;
+}
+
+/* Highlight list on each product card */
+.book-highlights {
+  display: grid;
+  gap: 9px;
+  margin: 22px 0 20px;
+  padding: 0;
+  list-style: none;
+}
+
+.book-highlights li {
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+  color: var(--ink-soft);
+  font-size: .86rem;
+  line-height: 1.5;
+}
+
+.book-highlights svg { flex: none; margin-top: 3px; color: var(--lilac-deep); }
+
+/* ── IAT 2027 Master Question Bank deep dive ────────────────────── */
+.book-detail {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(30px, 4.5vw, 52px);
+}
+
+.book-detail-head { max-width: 800px; }
+.book-detail-head h2 { margin: 14px 0 18px; }
+.book-detail-head p { color: var(--ink-soft); font-size: 1rem; line-height: 1.68; }
+.book-detail-head b { color: var(--ink); }
+
+.book-detail-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+}
+
+.book-detail-card {
+  padding: 22px 20px;
+  border: 1px solid var(--card-border);
+  border-radius: 18px;
+  /* Theme tokens, not a white wash: in dark mode a translucent white surface
+     left the light `--ink-soft` copy at ~2.4:1. */
+  background: var(--card-bg);
+  box-shadow: 0 14px 34px rgba(23, 21, 38, .06);
+}
+
+.book-detail-card.summary { grid-column: span 2; }
+
+.book-detail-kicker {
+  display: block;
+  margin-bottom: 10px;
+  color: var(--lilac-deep);
+  font: 600 .6rem var(--mono);
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+
+.book-detail-card strong {
+  display: block;
+  color: var(--ink);
+  font: 800 2.4rem/1 var(--display);
+  letter-spacing: -.03em;
+}
+
+.book-detail-sub {
+  display: block;
+  margin-top: 6px;
+  color: var(--ink-soft);
+  font: 400 .72rem var(--mono);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+.book-detail-card p { margin: 12px 0 0; color: var(--ink-soft); font-size: .88rem; line-height: 1.6; }
+
+.book-detail-card ul { display: grid; gap: 10px; margin: 16px 0 0; padding: 0; list-style: none; }
+.book-detail-card li { color: var(--ink-soft); font-size: .86rem; line-height: 1.55; }
+.book-detail-card li b { color: var(--ink); }
+
+.book-detail-footer {
+  display: grid;
+  gap: 22px;
+  grid-template-columns: 1.3fr .7fr;
+  align-items: start;
+}
+
+.book-targets ul { display: grid; gap: 11px; margin: 16px 0 0; padding: 0; list-style: none; }
+.book-targets li { display: flex; gap: 10px; color: var(--ink-soft); font-size: .9rem; line-height: 1.55; }
+.book-targets svg { flex: none; margin-top: 3px; color: var(--lilac-deep); }
+
+.book-author {
+  padding: 24px 22px;
+  border-radius: 18px;
+  /* A deliberate dark panel in both themes (as with the printer body):
+     `var(--ink)` flips to near-white in dark mode, which made this card
+     white-on-white and unreadable. */
+  background: #12101e;
+  border: 1px solid rgba(255, 255, 255, .07);
+  color: #f4f1ec;
+}
+
+.book-author h3 { margin: 12px 0 10px; color: #fff; font: 800 1.5rem/1 var(--display); }
+.book-author p { margin: 0; color: rgba(255, 255, 255, .76); font-size: .88rem; line-height: 1.68; }
+.book-author .eyebrow { color: var(--lime-bg); }
+
+.cta-panel-note { margin: 10px 0 0; color: rgba(255, 255, 255, .68); font-size: .85rem; }
+
+/* Desktop: summary banner on top, four subject cards in one row */
+@media (min-width: 900px) {
+  .book-detail-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .book-detail-card.summary { grid-column: 1 / -1; }
+}
+
+@media (max-width: 980px) {
+  .book-detail-footer { grid-template-columns: 1fr; }
+  .book-detail-card.summary { grid-column: span 1; }
+}
+
+@media (max-width: 900px) {
+  .book-product { grid-template-columns: 1fr; min-height: 0; }
+  .book-object { min-height: 320px; padding: 30px 0; }
+  .book-product-copy { padding: 30px 22px 36px; }
+  .books-hero-card { width: min(238px, 60vw); height: auto; aspect-ratio: 760 / 1150; }
+  .books-hero-art { min-height: 480px; }
+}
+
+@media (max-width: 560px) {
+  .book-object { min-height: 280px; }
+  .book-cover, .book-pages { width: 168px; }
+  .book-product-copy h2 { font-size: 1.7rem; }
+  .book-detail-card { padding: 18px 16px; }
+  .book-detail-card strong { font-size: 2rem; }
+  .books-hero-art { min-height: 400px; }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   TOUCH DEVICES — final hover neutralisation (cascade-last on purpose)
+   The touch block earlier in this file predates the dark-theme and
+   `[data-tier]` variants that come after it, which re-declare hover
+   transforms and can win the cascade. On a touch screen :hover sticks
+   after a tap, so those states look broken and cost paint for nothing.
+   ══════════════════════════════════════════════════════════════════ */
+@media (hover: none), (pointer: coarse) {
+  .form-submit button:hover,
+  .form-submit p a:hover,
+  .policy-layout aside a:hover,
+  .dimension:hover,
+  .theme-switch__circle-container:hover,
+  [data-theme="dark"] .dimension:hover,
+  [data-theme="dark"] .way-item:hover,
+  [data-theme="dark"] .mentor-card:hover,
+  [data-theme="dark"] .feature-card:hover,
+  [data-theme="dark"] .feature-card:hover .feature-icon,
+  [data-theme="dark"] .faq-trigger:hover,
+  [data-theme="dark"] .arrow-link.solid:hover,
+  [data-theme="dark"] .social-links a:hover,
+  [data-theme="dark"] .header-cta:hover,
+  [data-theme="dark"] .back-to-top:hover,
+  [data-theme="dark"] .slide-arrow:hover,
+  [data-theme="dark"] .footer-column a:hover,
+  [data-theme="dark"] .mentor-cta:hover,
+  [data-theme="dark"] .success-reset:hover,
+  [data-theme="dark"] .form-submit button:hover,
+  [data-tier="low"] .feature-card:hover,
+  [data-tier="low"] .stat-item:hover,
+  [data-tier="low"] .slide-card:hover {
+    transform: none !important;
+    box-shadow: none !important;
+    filter: none !important;
+    letter-spacing: inherit;
+  }
+
+  /* Anything that only appeared on hover stays visible on touch */
+  .book-hover-label,
+  .hover-member-scroll-cue,
+  .mentor-cta { opacity: 1 !important; }
+
+  /* Decorative hover-only layers are pure cost here */
+  .book-shape::after,
+  .plan-card::before,
+  .feature-card::after { display: none !important; }
+
+  /* Hover-revealed captions that use a transform to slide in */
+  .mentor-portrait:hover .portrait-badge,
+  .portrait-badge { transform: none !important; }
+
+  /* Smooth-scroll easing on touch is handled natively; drop the helper */
+  .scroll-rule i { animation: none !important; }
+}

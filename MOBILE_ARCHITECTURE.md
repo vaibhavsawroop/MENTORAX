@@ -220,3 +220,56 @@ Dark mode is not just inverted `--paper`:
 - **Contrast fixes** — dark-ink washes that vanished on `#08070d`
   (carousel dots, dashboard active states) become light-ink washes;
   `body-large` text is lifted to keep ≥ 4.5:1.
+
+## 10. Lighter first paint (chunking, deferred third parties)
+
+Three changes here, all measurable in `npm run build` output:
+
+- **Vendor chunking** (`vite.config.ts` → `manualChunks`). Everything used to
+  land in one ~593 kB entry chunk, so a one-line app change invalidated the
+  whole download and the parser worked through React, GSAP, framer-motion and
+  three.js in a single task. Now: `vendor-react` (~231 kB), `vendor-motion`
+  (~260 kB), `vendor-icons` (~7 kB), app code ~97 kB, and `vendor-3d`
+  (~867 kB) which is imported *only* by the lazily-mounted hero scene. First
+  paint drops by roughly 100 kB (29 kB gzipped) and repeat visits re-download
+  just the app chunk. `chunkSizeWarningLimit` is raised to 900 with a comment
+  because three.js is isolated and lazy by design.
+- **Razorpay is no longer loaded on every page.** `checkout.js` used to be a
+  blocking `<script>` in `index.html`. It is now injected by
+  `src/components/Checkout.tsx` when a checkout page mounts (and awaited before
+  the modal opens), so every other route skips the third-party download and its
+  main-thread parse. Verified by probe: `window.Razorpay` is `undefined` on
+  `/mentorship`, a function on `/checkout`.
+- **Horizontal reveals are disabled under 720 px** (`ScrollFX.tsx`). See §11.
+
+## 11. Horizontal panning on phones (fixed)
+
+A reveal element sits in its from-state *outside* its own column until it is
+scrolled into view. On `/contact` the enquiry form carried
+`data-reveal="right"` (46 px), which pushed it past the viewport edge; the page
+could then be panned sideways by ~30 px, and the form's right edge looked cut
+off before it ever animated. Two rules came out of it:
+
+- Horizontal reveal offsets (`left`/`right`) are dropped below 720 px — those
+  variants become pure fades there, while vertical ones keep a gentler 22 px.
+  Desktop is unchanged.
+- The root element still must not be clipped (§5). `overflow-x: clip` on
+  `<html>` was tested and *did* leave vertical scrolling intact in this
+  Chromium, but it remains a root-overflow change with a catastrophic failure
+  mode if a future engine disagrees, so the root cause is fixed instead.
+
+Verification probe (emulated phone, every route): scroll the document
+sideways with `window.scrollTo(600, 0)` and read `window.scrollX` — it must
+stay `0`, and every `form.contact-form` must sit within the viewport before
+*and* after its reveal.
+
+## 12. Touch hover neutralisation (cascade-last)
+
+`styles.css` ends with an `@media (hover: none), (pointer: coarse)` block. It
+exists because the earlier touch block sits *before* the dark-theme and
+`[data-tier]` variants, which re-declare the same hover transforms with equal
+or higher specificity and therefore win. On a touch screen `:hover` sticks
+after a tap: it both looks broken and keeps the compositor busy. The final
+block neutralises those transforms/shadows/filters, keeps hover-revealed
+labels visible, and drops hover-only decorative layers (`::after` sheens,
+`.plan-card::before`) that only ever cost paint on touch.

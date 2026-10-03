@@ -49,8 +49,10 @@ export type Book = {
   title: string;
   subtitle: string;
   cover: MediaAsset;
-  price: 'TBA';
+  /** Display price, e.g. '₹499'. The authoritative price lives in api/_catalog.ts. */
+  price: string;
   description: string;
+  highlights?: string[];
   purchaseUrl: string | null;
   status: ContentStatus;
 };
@@ -318,31 +320,44 @@ export const studyMaterials: StudyMaterial[] = [
 export const books: Book[] = [
   {
     id: 'book-01',
-    title: 'MentoraX Book 01',
-    subtitle: 'Official title, cover, price, and purchase link to be added.',
+    title: "IAT PYQ's Solution",
+    subtitle: "IAT PYQ's Solution · 2017–2024 · Paperback",
     cover: {
-      src: '/assets/books/mentorax-book-01-cover.jpg',
-      alt: 'MentoraX Book 01 cover',
-      status: 'awaiting-details',
+      src: '/assets/books/mentorax-book-01-cover.webp',
+      alt: "IAT PYQ's Solution — MentoraX paperback cover",
+      status: 'ready',
     },
-    price: 'TBA',
-    description: 'Product information is awaiting final material from the MentoraX team.',
-    purchaseUrl: null,
-    status: 'awaiting-details',
+    price: '₹499',
+    description:
+      'Eight years of authentic IAT papers (2017–2024), fully solved, with Question → Concept → Approach → Solution breakdowns across all four subjects.',
+    highlights: [
+      '2017–2024 papers solved across Physics, Chemistry, Maths & Biology',
+      'Concept maps and shortcut techniques for revision',
+      'Physical paperback · free delivery across India',
+    ],
+    purchaseUrl: '/checkout?product=iat-pyq-book',
+    status: 'ready',
   },
   {
     id: 'book-02',
-    title: 'MentoraX Book 02',
-    subtitle: 'Official title, cover, price, and purchase link to be added.',
+    title: 'IAT 2027: Master Question Bank',
+    subtitle: '3,450 Chapter-Wise Questions · 463 Pages · Paperback',
     cover: {
-      src: '/assets/books/mentorax-book-02-cover.jpg',
-      alt: 'MentoraX Book 02 cover',
-      status: 'awaiting-details',
+      src: '/assets/books/mentorax-book-02-cover.webp',
+      alt: 'IAT 2027: Master Question Bank — MentoraX paperback cover',
+      status: 'ready',
     },
-    price: 'TBA',
-    description: 'Product information is awaiting final material from the MentoraX team.',
-    purchaseUrl: null,
-    status: 'awaiting-details',
+    price: '₹999',
+    description:
+      'An intensive, high-density practice book for IISER, IISc Bengaluru and IIT Madras (BS Medical Sciences) aspirants: 3,450 chapter-wise questions across the full Class 11 and 12 NCERT syllabus.',
+    highlights: [
+      'Physics 1,000 · Chemistry 950 · Maths 700 · Biology 800 questions',
+      '10-Year Empirical Trend Analysis (2017–2026)',
+      'Diagnostic master answer keys after every chapter',
+      'Balanced PCMB format for maximum composite scores',
+    ],
+    purchaseUrl: '/checkout?product=iat-qb-2027',
+    status: 'ready',
   },
 ];
 

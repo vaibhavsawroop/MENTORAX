@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && npm run typecheck:api && vite build",
+    "typecheck:api": "tsc -p tsconfig.api.json",
+    "email:preview": "node scripts/render-email-previews.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

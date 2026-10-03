@@ -816,17 +816,33 @@ function Home() {
         viewport={{ once: true, amount: 0.2 }}
         transition={{ duration: 0.85, ease: [0.16, 1, 0.3, 1] }}
       >
-        <Link to="/checkout?product=iat-pyq-book" className="book-shape b-one" data-parallax="-0.22" aria-label="IAT book — Buy now">
-          IAT
+        <Link to="/checkout?product=iat-pyq-book" className="book-shape b-one has-art" data-parallax="-0.22" aria-label="IAT PYQ's Solution Book · ₹499 — Buy now">
+          <img
+            src="/assets/books/mentorax-book-01-cover-sm.webp"
+            alt=""
+            aria-hidden="true"
+            width={400}
+            height={605}
+            loading="lazy"
+            decoding="async"
+          />
           <span className="book-hover-label">Buy IAT · ₹499</span>
         </Link>
-        <Link to="/checkout?product=nest-pyq-book" className="book-shape b-two" data-parallax="0.14" aria-label="NEST book — Buy now">
-          NEST
-          <span className="book-hover-label">Buy NEST · ₹499</span>
+        <Link to="/checkout?product=iat-qb-2027" className="book-shape b-two has-art" data-parallax="0.14" aria-label="IAT 2027 Master Question Bank · ₹999 — Buy now">
+          <img
+            src="/assets/books/mentorax-book-02-cover-sm.webp"
+            alt=""
+            aria-hidden="true"
+            width={400}
+            height={578}
+            loading="lazy"
+            decoding="async"
+          />
+          <span className="book-hover-label">Question Bank · ₹999</span>
         </Link>
-        <Link to="/checkout?product=all-pyq-combo" className="book-shape b-three" data-parallax="0.3" aria-label="MentoraX All Combo — Buy now">
+        <Link to="/checkout?product=all-pyq-combo" className="book-shape b-three" data-parallax="0.3" aria-label="Both IAT books combo · ₹1,199 — Buy now">
           X
-          <span className="book-hover-label">Combo · ₹799</span>
+          <span className="book-hover-label">Combo · ₹1,199</span>
         </Link>
       </motion.div>
     </section>
@@ -1006,17 +1022,18 @@ function BooksHero() {
       <div className="books-hero-grid">
         <div className="books-hero-copy">
           <motion.div className="books-launch-pill" initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .5 }}>
-            <span /> IAT MENTORAX · BOOK 01
+            <span /> IAT MENTORAX · TWO EDITIONS
           </motion.div>
           <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .65, delay: .08 }}>
             <Eyebrow>For serious IAT aspirants</Eyebrow>
             <h1>Master the past.<br />Ace the <em>future.</em></h1>
           </motion.div>
           <motion.p className="books-hero-lede" initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .65, delay: .16 }}>
-            IAT PYQ&apos;s Solution is the complete solved question bank for the IISER Aptitude Test — built to help you understand the exam, not just finish it.
+            Two books for the IISER Aptitude Test: <b>IAT PYQ&apos;s Solution</b> (2017–2024 papers) and the <b>IAT 2027 Master Question Bank</b> (3,450 chapter-wise questions) — built to help you understand the exam, not just finish it.
           </motion.p>
           <motion.div className="books-hero-actions" initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .65, delay: .24 }}>
-            <Link className="arrow-link solid" to="/checkout?product=iat-pyq-book">Buy the book · ₹499 <ArrowUpRight size={17} /></Link>
+            <Link className="arrow-link solid" to="/checkout?product=iat-pyq-book">Buy PYQ Solution · ₹499 <ArrowUpRight size={17} /></Link>
+            <Link className="arrow-link" to="/checkout?product=iat-qb-2027">Question Bank · ₹999 <ArrowUpRight size={17} /></Link>
             <span className="books-hero-note">Physical Paperback<br />Free shipping · Delivered to your door</span>
           </motion.div>
           <motion.div className="books-subjects" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: .7, delay: .4 }}>
@@ -1026,12 +1043,17 @@ function BooksHero() {
         <div className="books-hero-art" aria-label="IAT PYQ's Solution book">
           <div className="books-hero-orbit books-hero-orbit-one" data-drift="80" />
           <div className="books-hero-orbit books-hero-orbit-two" data-drift="-55" />
-          <motion.div className="books-hero-card" initial={{ opacity: 0, y: 42, rotate: 9 }} animate={{ opacity: 1, y: 0, rotate: 5 }} transition={{ duration: .9, delay: .15, ease: [0.22, 1, 0.36, 1] }}>
-            <span className="books-card-kicker">IAT Mentorax</span>
-            <strong>IAT<br /><em>PYQ&apos;s</em></strong>
-            <span className="books-card-solution">Solution</span>
-            <span className="books-card-years">2017—2024</span>
-            <span className="books-card-subjects">PHYSICS · CHEMISTRY<br />MATHEMATICS · BIOLOGY</span>
+          <motion.div className="books-hero-card has-art" initial={{ opacity: 0, y: 42, rotate: 9 }} animate={{ opacity: 1, y: 0, rotate: 5 }} transition={{ duration: .9, delay: .15, ease: [0.22, 1, 0.36, 1] }}>
+            <img
+              className="books-hero-cover"
+              src="/assets/books/mentorax-book-01-cover.webp"
+              srcSet="/assets/books/mentorax-book-01-cover-sm.webp 400w, /assets/books/mentorax-book-01-cover.webp 760w"
+              sizes="(max-width: 900px) 58vw, 300px"
+              alt="IAT PYQ's Solution — 2017–2024 MentoraX paperback cover"
+              width={760}
+              height={1150}
+              decoding="async"
+            />
             <b>₹499</b>
           </motion.div>
           <motion.div className="books-floating-tag books-floating-tag-top" initial={{ opacity: 0, x: 18 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: .55, delay: .65 }}>
@@ -1042,13 +1064,226 @@ function BooksHero() {
           </motion.div>
         </div>
       </div>
-      <div className="books-hero-footer"><span>2017–2024 PYQs</span><i /><span>4 subjects</span><i /><span>Physical paperback</span><i /><span>₹499 · Free delivery</span></div>
+      <div className="books-hero-footer"><span>2017–2024 PYQs</span><i /><span>3,450 chapter-wise questions</span><i /><span>Physical paperback</span><i /><span>Free delivery across India</span></div>
     </section>
   )
 }
 
-function Books() { return <><BooksHero /><section className="book-showcase section-pad"><BookProduct type="IAT" subtitle="IAT PYQ's Solution · 2017–2024" description="Practice real IAT questions, understand the concepts behind them, and learn how the exam actually asks questions." tone="plum" productId="iat-pyq-book" /><BookProduct type="NEST" subtitle="NEST PYQ's Solution · 2017–2024" description="A focused NEST edition for practising authentic questions, understanding recurring concepts, and revising with confidence." tone="teal" productId="nest-pyq-book" /></section><section className="library-note" data-reveal="up"><BookOpen /><div><Eyebrow>What makes it different?</Eyebrow><h2>Question → Concept → Approach → Solution.</h2><p>Instead of simply telling you the answer, the book helps you understand how to arrive at it. That makes PYQ practice more useful, more deliberate, and easier to revise.</p></div></section><section className="section-pad"><div className="cta-panel dark-cta" data-reveal="scale"><div><span className="tiny-kicker">Mega Bundle · Save ₹199</span><h2>Master both IAT &amp; NEST in one <em>bundle.</em></h2></div><Link className="arrow-link solid" to="/checkout?product=all-pyq-combo">Get 2-in-1 Combo · ₹799 <ArrowUpRight size={17} /></Link></div></section></> }
-function BookProduct({ type, subtitle, description, tone, productId = 'iat-pyq-book' }: { type: string; subtitle: string; description: string; tone: string; productId?: string }) { return <AnimateIn><article className={`book-product ${tone}`}><div className="book-object"><div className="book-cover"><span>IAT Mentorax<br />book 01</span><strong>{type}</strong><i>{subtitle}</i><b>2017–24</b></div><div className="book-pages" /></div><div className="book-product-copy"><span className="tiny-kicker">{subtitle}</span><h2>{type} <em>edition.</em></h2><p>{description}</p><div className="product-meta"><span>Price <b>₹499</b></span><span>Format <b>Paperback</b></span><span>Delivery <b>Free · All India</b></span></div><Link className="arrow-link solid" to={`/checkout?product=${productId}`}>Order the book · ₹499 <ArrowUpRight size={17} /></Link></div></article></AnimateIn> }
+/**
+ * Book catalogue for the /books page.
+ *
+ * Prices are repeated in api/_catalog.ts (the authoritative source used to
+ * charge) and src/components/Checkout.tsx (the basket) — update all three
+ * together when a price changes.
+ */
+type ShowcaseBook = {
+  id: string
+  name: string
+  price: number
+  originalPrice?: number
+  subtitle: string
+  description: string
+  highlights: string[]
+  cover: string
+  coverSmall: string
+  /** Aspect ratio of the cover art, used so nothing is ever stretched. */
+  ratio: string
+  tone: 'plum' | 'teal'
+}
+
+const BOOK_01: ShowcaseBook = {
+  id: 'iat-pyq-book',
+  name: "IAT PYQ's Solution",
+  price: 499,
+  originalPrice: 999,
+  subtitle: "IAT PYQ's Solution · 2017–2024",
+  description:
+    'Eight years of authentic IAT papers, fully solved. Practise real questions, understand the concepts behind them, and learn how the exam actually asks them.',
+  highlights: [
+    '2017–2024 papers solved across Physics, Chemistry, Maths & Biology',
+    'Question → Concept → Approach → Solution for every paper',
+    'Concept maps and shortcut techniques for revision',
+    'Physical paperback · free delivery anywhere in India',
+  ],
+  cover: '/assets/books/mentorax-book-01-cover.webp',
+  coverSmall: '/assets/books/mentorax-book-01-cover-sm.webp',
+  ratio: '760 / 1150',
+  tone: 'plum',
+}
+
+const BOOK_02: ShowcaseBook = {
+  id: 'iat-qb-2027',
+  name: 'IAT 2027: Master Question Bank',
+  price: 999,
+  originalPrice: 1499,
+  subtitle: '3,450 Chapter-Wise Questions · 463 Pages',
+  description:
+    'An intensive, high-density practice book for IISER, IISc and IIT Madras admissions — full Class 11 & 12 NCERT coverage tested through 3,450 chapter-wise questions.',
+  highlights: [
+    '3,450 chapter-wise questions · Physics 1,000 · Chemistry 950 · Maths 700 · Biology 800',
+    '10-Year Empirical Trend Analysis (2017–2026) with chapter frequency and weightage',
+    'Diagnostic master answer keys at the end of every chapter',
+    'Balanced PCMB format — strengthen your weakest subject deliberately',
+  ],
+  cover: '/assets/books/mentorax-book-02-cover.webp',
+  coverSmall: '/assets/books/mentorax-book-02-cover-sm.webp',
+  ratio: '760 / 1098',
+  tone: 'teal',
+}
+
+const QB_2027 = {
+  pages: 463,
+  questions: 3450,
+  subjects: [
+    { name: 'Physics', count: 1000, topics: 'Mechanics, Rotational Dynamics, Electromagnetism, Modern Physics, Thermal Physics, Optics and Waves.' },
+    { name: 'Chemistry', count: 950, topics: 'Physical Principles, Organic Reaction Mechanisms, Chemical Bonding and Coordination Compounds.' },
+    { name: 'Mathematics', count: 700, topics: 'Calculus Core, Vectors & 3D Geometry, Matrices, Analytical Geometry and Combinatorics.' },
+    { name: 'Biology', count: 800, topics: 'Human & Plant Physiology, Molecular Genetics, Biotechnology, Cell Biology and Ecology.' },
+  ],
+  targets: [
+    'IISER Aptitude Test (IAT) — BS-MS / BS admissions at IISER Berhampur, Bhopal, Kolkata, Mohali, Pune, Thiruvananthapuram and Tirupati',
+    'IISc Bengaluru — Four-Year Bachelor of Science (Research)',
+    'IIT Madras — BS in Medical Sciences and Engineering',
+    'NEST & Foundation science entrances',
+  ],
+  author:
+    'Raj is the Founder of MentoraX and a former BS-MS Scholar at the Indian Institute of Science Education and Research Thiruvananthapuram (IISER TVM). Having mentored thousands of pure science aspirants, he develops specialised academic resources focused on analytical and scientific reasoning.',
+}
+
+function BookProduct({ book }: { book: ShowcaseBook }) {
+  return (
+    <AnimateIn>
+      <article className={`book-product ${book.tone}`}>
+        <div className="book-object" style={{ ['--cover-ratio' as string]: book.ratio }}>
+          <div className="book-cover has-art">
+            <img
+              src={book.cover}
+              srcSet={`${book.coverSmall} 400w, ${book.cover} 760w`}
+              sizes="(max-width: 900px) 46vw, 205px"
+              alt={`${book.name} — MentoraX paperback cover`}
+              width={760}
+              height={Math.round((760 * Number(book.ratio.split('/')[1])) / Number(book.ratio.split('/')[0]))}
+              loading="lazy"
+              decoding="async"
+            />
+          </div>
+          <div className="book-pages" />
+        </div>
+
+        <div className="book-product-copy">
+          <span className="tiny-kicker">{book.subtitle}</span>
+          <h2>{book.name} <em>edition.</em></h2>
+          <p>{book.description}</p>
+
+          <ul className="book-highlights">
+            {book.highlights.map((highlight) => (
+              <li key={highlight}>
+                <Check size={14} />
+                <span>{highlight}</span>
+              </li>
+            ))}
+          </ul>
+
+          <div className="product-meta">
+            <span>Price <b>₹{book.price.toLocaleString('en-IN')}</b></span>
+            {book.originalPrice && <span>MRP <b style={{ textDecoration: 'line-through', opacity: .55 }}>₹{book.originalPrice.toLocaleString('en-IN')}</b></span>}
+            <span>Format <b>Paperback</b></span>
+            <span>Delivery <b>Free · All India</b></span>
+          </div>
+
+          <Link className="arrow-link solid" to={`/checkout?product=${book.id}`}>
+            Order the book · ₹{book.price.toLocaleString('en-IN')} <ArrowUpRight size={17} />
+          </Link>
+        </div>
+      </article>
+    </AnimateIn>
+  )
+}
+
+function Books() {
+  return (
+    <>
+      <BooksHero />
+
+      <section className="book-showcase section-pad">
+        <BookProduct book={BOOK_01} />
+        <BookProduct book={BOOK_02} />
+      </section>
+
+      {/* The full story behind the 2027 question bank */}
+      <section className="book-detail section-pad">
+        <div className="book-detail-head">
+          <Eyebrow>About the IAT 2027 Master Question Bank</Eyebrow>
+          <h2>A high-density <em>practice engine.</em></h2>
+          <p>
+            Engineered for aspirants targeting admission into the <b>Indian Institutes of Science Education and Research (IISERs)</b>,
+            <b> IISc Bengaluru</b> and <b>IIT Madras (BS Medical Sciences)</b>. Covering the full Class 11 and Class 12 NCERT syllabus
+            across all four subjects, this {QB_2027.pages}-page book bridges the gap between basic theory and the analytical rigour
+            the IISER Aptitude Test demands.
+          </p>
+        </div>
+
+        <div className="book-detail-grid">
+          <article className="book-detail-card summary">
+            <span className="book-detail-kicker">Inside the book</span>
+            <strong>{QB_2027.questions.toLocaleString('en-IN')}</strong>
+            <span className="book-detail-sub">chapter-wise questions</span>
+            <ul>
+              <li><b>10-Year Empirical Trend Analysis (2017–2026)</b> — chapter frequency distributions, topic weightages and patterns from the latest official papers.</li>
+              <li><b>Diagnostic master answer keys</b> — verified final answers at the end of every chapter for quick self-evaluation.</li>
+              <li><b>Balanced PCMB format</b> — built so PCB students strengthen Mathematics and PCM students master Biology.</li>
+            </ul>
+          </article>
+
+          {QB_2027.subjects.map((subject) => (
+            <article className="book-detail-card" key={subject.name}>
+              <span className="book-detail-kicker">{subject.name}</span>
+              <strong>{subject.count.toLocaleString('en-IN')}</strong>
+              <span className="book-detail-sub">questions</span>
+              <p>{subject.topics}</p>
+            </article>
+          ))}
+        </div>
+
+        <div className="book-detail-footer">
+          <div className="book-targets">
+            <Eyebrow>Target examinations</Eyebrow>
+            <ul>
+              {QB_2027.targets.map((target) => (
+                <li key={target}><Check size={14} /><span>{target}</span></li>
+              ))}
+            </ul>
+          </div>
+          <div className="book-author">
+            <Eyebrow>About the author</Eyebrow>
+            <h3>Raj</h3>
+            <p>{QB_2027.author}</p>
+          </div>
+        </div>
+      </section>
+
+      <section className="library-note" data-reveal="up">
+        <BookOpen />
+        <div>
+          <Eyebrow>What makes it different?</Eyebrow>
+          <h2>Question → Concept → Approach → Solution.</h2>
+          <p>Instead of simply telling you the answer, the books help you understand how to arrive at it. That makes practice more useful, more deliberate, and easier to revise.</p>
+        </div>
+      </section>
+
+      <section className="section-pad">
+        <div className="cta-panel dark-cta" data-reveal="scale">
+          <div>
+            <span className="tiny-kicker">Mega Bundle · Save ₹299</span>
+            <h2>Both IAT editions in one <em>bundle.</em></h2>
+            <p className="cta-panel-note">IAT PYQ&apos;s Solution + IAT 2027 Master Question Bank · ₹1,199</p>
+          </div>
+          <Link className="arrow-link solid" to="/checkout?product=all-pyq-combo">Get the 2-book combo · ₹1,199 <ArrowUpRight size={17} /></Link>
+        </div>
+      </section>
+    </>
+  )
+}
 function PlanCardContent({ plan }: { plan: (typeof plans)[number] }) { return <><div className="plan-top"><span>{plan.index}</span>{plan.featured && <span className="plan-badge">Most Popular</span>}</div><h3>{plan.name}</h3>{'price' in plan && <div className="price-tba"><span>{plan.price}</span>{'originalPrice' in plan && <span style={{ textDecoration: 'line-through', opacity: 0.5, fontSize: '0.7em', marginLeft: '8px' }}>{plan.originalPrice}</span>}</div>}<p>{plan.note}</p><ul>{plan.features.slice(0, 3).map((feature) => <li key={feature}><Check size={14} />{feature}</li>)}</ul><Link to={`/checkout?product=${'productId' in plan ? plan.productId : 'catalyst'}`} className="plan-link">Enroll Now <ArrowRight size={16} /></Link></> }
 
 function MentorProfileCard({ person, index }: { person: MentorCard; index: number }) {

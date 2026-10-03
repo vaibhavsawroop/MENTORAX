@@ -1,111 +1,119 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node'
+import type { ApiRequest, ApiResponse } from '../_types.js'
 import Razorpay from 'razorpay'
+import { hasCompleteAddress, priceInPaise, resolveProduct, type ShippingAddress } from '../_catalog.js'
 
 /**
- * Server-side product catalog — the ONLY source of truth for prices.
- * Clients cannot override these. Prevents price-tampering attacks.
+ * POST /api/payment/create-order
+ *
+ * Body: { productId, studentName?, studentEmail?, shippingAddress? }
+ *
+ * Creates a real Razorpay order and returns the `keyId` the browser needs to
+ * open the checkout modal. The price always comes from the server catalogue
+ * (`_catalog.ts`) so a tampered client cannot change what is charged.
+ *
+ * When Razorpay keys are missing this handler no longer pretends the order
+ * succeeded: it returns 503 unless the deployment explicitly opted into local
+ * simulation with ALLOW_MOCK_PAYMENTS=true. That opt-in exists because the old
+ * silent mock made a broken deployment look like a working checkout.
  */
-const SERVER_PRODUCTS: Record<string, { name: string; priceINR: number; type: 'book' | 'batch' }> = {
-  'iat-pyq-book':   { name: "IAT PYQ's Solution Book (Paperback)", priceINR: 499,   type: 'book' },
-  'nest-pyq-book':  { name: "NEST PYQ's Solution Book (Paperback)", priceINR: 499,  type: 'book' },
-  'all-pyq-combo':  { name: 'IAT + NEST Mega Book Combo (Paperback)', priceINR: 799, type: 'book' },
-  'genesis':        { name: 'MentoraX Genesis — Class 11 Foundation (2 Years)', priceINR: 10000, type: 'batch' },
-  'quantum':        { name: 'MentoraX Quantum — Class 12 + Droppers (1 Year)', priceINR: 5000,  type: 'batch' },
-  'catalyst':       { name: 'MentoraX Catalyst — Class 12 + Droppers',          priceINR: 1500,  type: 'batch' },
+
+const CORS_HEADERS = {
+  'Access-Control-Allow-Credentials': 'true',
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET,OPTIONS,PATCH,DELETE,POST,PUT',
+  'Access-Control-Allow-Headers':
+    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version',
 }
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
-  res.setHeader('Access-Control-Allow-Credentials', 'true')
-  res.setHeader('Access-Control-Allow-Origin', '*')
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT')
-  res.setHeader(
-    'Access-Control-Allow-Headers',
-    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
-  )
+export default async function handler(req: ApiRequest, res: ApiResponse) {
+  for (const [name, value] of Object.entries(CORS_HEADERS)) res.setHeader(name, value)
 
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end()
-  }
-
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' })
-  }
+  if (req.method === 'OPTIONS') return res.status(200).end()
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
   try {
-    const { productId, studentEmail, studentName, shippingAddress } = req.body || {}
-
-    // Validate required fields
-    if (!productId) {
-      return res.status(400).json({ error: 'Product ID is required.' })
+    const body = (req.body ?? {}) as {
+      productId?: string
+      studentName?: string
+      studentEmail?: string
+      shippingAddress?: ShippingAddress
     }
 
-    // Look up the product server-side — prevents price tampering
-    const product = SERVER_PRODUCTS[productId]
-    if (!product) {
-      return res.status(400).json({ error: 'Invalid product ID.' })
-    }
+    const resolved = resolveProduct(body.productId)
+    if (!resolved) return res.status(400).json({ error: 'Invalid product ID.' })
 
-    // For book orders, require a shipping address
-    if (product.type === 'book') {
-      if (!shippingAddress || !shippingAddress.street || !shippingAddress.city || !shippingAddress.state || !shippingAddress.pincode) {
-        return res.status(400).json({ error: 'Complete shipping address is required for book orders.' })
-      }
+    const { id: productId, product } = resolved
+
+    if (product.type === 'book' && !hasCompleteAddress(body.shippingAddress)) {
+      return res.status(400).json({ error: 'Complete shipping address is required for book orders.' })
     }
 
     const keyId = process.env.RAZORPAY_KEY_ID
     const keySecret = process.env.RAZORPAY_KEY_SECRET
 
-    // If Razorpay credentials are present in env, create real Razorpay order
-    if (keyId && keySecret) {
-      const rzp = new Razorpay({
-        key_id: keyId,
-        key_secret: keySecret,
-      })
-
-      const options = {
-        amount: Math.round(product.priceINR * 100), // in paise — from server catalog, NOT client
-        currency: 'INR',
-        receipt: `mtx_rcpt_${Date.now().toString().slice(-8)}`,
-        notes: {
+    if (!keyId || !keySecret) {
+      // Local development may explicitly opt into a simulation; production never does.
+      if (process.env.ALLOW_MOCK_PAYMENTS === 'true') {
+        return res.status(200).json({
+          success: true,
+          mock: true,
+          orderId: `order_mock_${Date.now().toString().slice(-8)}`,
+          amount: priceInPaise(product),
+          currency: 'INR',
+          keyId: 'rzp_test_mock_keys_pending',
           productId,
-          productName: product.name,
           productType: product.type,
-          studentEmail: studentEmail || '',
-          studentName: studentName || '',
-          ...(product.type === 'book' && shippingAddress ? {
-            shippingStreet: shippingAddress.street,
-            shippingCity: shippingAddress.city,
-            shippingState: shippingAddress.state,
-            shippingPincode: shippingAddress.pincode,
-          } : {}),
-        },
+          message: 'ALLOW_MOCK_PAYMENTS=true — running an offline payment simulation. No money moves.',
+        })
       }
 
-      const order = await rzp.orders.create(options)
-      return res.status(200).json({
-        success: true,
-        orderId: order.id,
-        amount: order.amount,
-        currency: order.currency,
-        keyId,
-        productType: product.type,
+      console.error('[create-order] RAZORPAY_KEY_ID / RAZORPAY_KEY_SECRET are not set for this deployment.')
+      return res.status(503).json({
+        error: 'Online payments are temporarily unavailable. Please write to managementrajiiserit@gmail.com and we will complete your order manually.',
+        code: 'payments_not_configured',
       })
     }
 
-    // Mock response when keys are pending setup
-    const mockOrderId = `order_mock_${Date.now().toString().slice(-8)}`
+    const rzp = new Razorpay({ key_id: keyId, key_secret: keySecret })
+
+    const order = await rzp.orders.create({
+      amount: priceInPaise(product),
+      currency: 'INR',
+      receipt: `mtx_rcpt_${Date.now().toString().slice(-8)}`,
+      // `productId` here is what verify.ts trusts later — it is written
+      // server-side and cannot be altered by the browser.
+      notes: {
+        productId,
+        productName: product.name,
+        productType: product.type,
+        studentEmail: body.studentEmail || '',
+        studentName: body.studentName || '',
+        ...(product.type === 'book' && body.shippingAddress
+          ? {
+              shippingStreet: body.shippingAddress.street || '',
+              shippingCity: body.shippingAddress.city || '',
+              shippingState: body.shippingAddress.state || '',
+              shippingPincode: body.shippingAddress.pincode || '',
+            }
+          : {}),
+      },
+    })
+
     return res.status(200).json({
       success: true,
-      orderId: mockOrderId,
-      amount: Math.round(product.priceINR * 100),
-      currency: 'INR',
-      keyId: 'rzp_test_mock_keys_pending',
+      orderId: order.id,
+      amount: order.amount,
+      currency: order.currency,
+      keyId,
+      productId,
       productType: product.type,
-      mock: true,
-      message: 'Razorpay keys pending. Running in interactive test simulation mode.',
     })
-  } catch (err: unknown) {
-    console.error('Create Order API Error:', err)
-    return res.status(500).json({ error: 'Failed to create payment order.' })
+  } catch (err) {
+    console.error('[create-order] failed:', err)
+    const message = err instanceof Error ? err.message : String(err)
+    return res.status(500).json({
+      error: 'Could not start the payment. Please try again in a moment.',
+      detail: process.env.NODE_ENV === 'production' ? undefined : message,
+    })
   }
 }

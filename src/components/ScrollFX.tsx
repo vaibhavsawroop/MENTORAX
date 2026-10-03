@@ -50,10 +50,20 @@ export function ScrollFX() {
 
       /* ── Staggered entrances (grouped per variant) ────────── */
       const isBlur = tier === 'high'
+      // A reveal element waits in its from-state just outside its column. On a
+      // phone there is no room for that sideways offset: an element sitting at
+      // the column edge would poke past the viewport and let the page pan
+      // horizontally (measured: 30 px of pan on /contact). Horizontal reveals
+      // therefore become pure fades under 720 px, while vertical ones keep a
+      // gentler offset. Root overflow is deliberately left alone — see
+      // MOBILE_ARCHITECTURE.md §5 for why `<html>` must not be clipped.
+      const isNarrow = window.matchMedia('(max-width: 720px)').matches
+      const shiftY = isNarrow ? 22 : 46
+      const shiftX = isNarrow ? 0 : 46
       const fromStates: Record<string, gsap.TweenVars> = {
-        up: { y: 46, opacity: 0 },
-        left: { x: -46, opacity: 0 },
-        right: { x: 46, opacity: 0 },
+        up: { y: shiftY, opacity: 0 },
+        left: isNarrow ? { opacity: 0 } : { x: -shiftX, opacity: 0 },
+        right: isNarrow ? { opacity: 0 } : { x: shiftX, opacity: 0 },
         scale: { y: 26, scale: 0.94, opacity: 0 },
         fade: { opacity: 0 },
         // Blur entrances reserve a filter layer — high tier only; lower

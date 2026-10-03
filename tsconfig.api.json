@@ -1,0 +1,17 @@
+{
+  "//": "Type-checks the serverless handlers in api/. These are compiled by Vercel separately from src/, so without this project a mistake here only surfaces in a deploy log (a missing type import once broke the whole payment path). Run with `npm run typecheck:api`; `npm run build` also runs it.",
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "types": ["node"],
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": ["api/**/*.ts"]
+}

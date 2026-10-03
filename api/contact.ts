@@ -1,111 +1,109 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { Resend } from 'resend'
+import type { ApiRequest, ApiResponse } from './_types.js'
+import {
+  SUPPORT_EMAIL,
+  fromCandidates,
+  renderContactAckEmail,
+  renderContactAdminEmail,
+  sendEmail,
+} from './_email.js'
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // Enable CORS for development and cross-origin checks
-  res.setHeader('Access-Control-Allow-Credentials', 'true')
-  res.setHeader('Access-Control-Allow-Origin', '*')
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT')
-  res.setHeader(
-    'Access-Control-Allow-Headers',
-    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
-  )
+/**
+ * POST /api/contact — website enquiry form.
+ *
+ * Sends the owner a branded notification (reply-to the student) and the student
+ * a branded acknowledgement. Delivery problems are logged and reported in the
+ * response instead of silently disappearing.
+ */
 
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end()
-  }
+const CORS_HEADERS = {
+  'Access-Control-Allow-Credentials': 'true',
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET,OPTIONS,PATCH,DELETE,POST,PUT',
+  'Access-Control-Allow-Headers':
+    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version',
+}
 
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' })
-  }
+export default async function handler(req: ApiRequest, res: ApiResponse) {
+  for (const [name, value] of Object.entries(CORS_HEADERS)) res.setHeader(name, value)
+
+  if (req.method === 'OPTIONS') return res.status(200).end()
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
   try {
-    const { name, email, phone, exam, interest, message } = req.body || {}
+    const body = (req.body ?? {}) as {
+      name?: string
+      email?: string
+      phone?: string
+      exam?: string
+      interest?: string
+      message?: string
+    }
 
+    const { name, email, message } = body
     if (!name || !email || !message) {
       return res.status(400).json({ error: 'Name, email, and message are required.' })
     }
 
     const apiKey = process.env.RESEND_API_KEY
-    const adminEmail = process.env.ADMIN_EMAIL || 'managementrajiiserit@gmail.com'
-    const fromEmail = process.env.CONTACT_FROM_EMAIL || process.env.FROM_EMAIL || 'MentoraX Support <support@mentoraxs.com>'
+    const adminEmail = process.env.ADMIN_EMAIL || SUPPORT_EMAIL
+    const senders = fromCandidates(process.env.CONTACT_FROM_EMAIL || process.env.FROM_EMAIL)
+    const dateStr = `${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })} IST`
 
-    if (apiKey) {
-      const resend = new Resend(apiKey)
-
-      // Send notification to MentoraX admin
-      await resend.emails.send({
-        from: fromEmail,
-        to: [adminEmail],
-        replyTo: email,
-        subject: `[MentoraX Enquiry] ${interest || 'General'} — ${name}`,
-        html: `
-          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; background: #0c0b16; color: #f4f1ec; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
-            <div style="border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 16px; margin-bottom: 20px;">
-              <h2 style="margin: 0; color: #d8ff6a; font-size: 24px;">New MentoraX Student Enquiry</h2>
-              <p style="margin: 4px 0 0; color: #a8a3bb; font-size: 14px;">Received on ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })} IST</p>
-            </div>
-            
-            <div style="margin-bottom: 18px;">
-              <strong style="color: #9b8aff; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em;">Student Details</strong>
-              <p style="margin: 6px 0; font-size: 16px;"><strong>Name:</strong> ${name}</p>
-              <p style="margin: 6px 0; font-size: 16px;"><strong>Email:</strong> <a href="mailto:${email}" style="color: #9b8aff;">${email}</a></p>
-              <p style="margin: 6px 0; font-size: 16px;"><strong>Mobile:</strong> ${phone || 'Not provided'}</p>
-              <p style="margin: 6px 0; font-size: 16px;"><strong>Target Exam:</strong> ${exam || 'Not specified'}</p>
-              <p style="margin: 6px 0; font-size: 16px;"><strong>Interested In:</strong> ${interest || 'General enquiry'}</p>
-            </div>
-
-            <div style="background: rgba(255,255,255,0.04); padding: 16px; border-radius: 8px; border-left: 3px solid #d8ff6a; margin-top: 20px;">
-              <strong style="color: #d8ff6a; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em;">Message / Goals</strong>
-              <p style="margin: 10px 0 0; font-size: 15px; line-height: 1.6; white-space: pre-wrap;">${message}</p>
-            </div>
-
-            <div style="margin-top: 28px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.1); color: #a8a3bb; font-size: 12px; text-align: center;">
-              MentoraX · Science of a clear path · <a href="https://mentoraxs.com" style="color: #9b8aff;">mentoraxs.com</a>
-            </div>
-          </div>
-        `,
-      })
-
-      // Send confirmation to the student
-      await resend.emails.send({
-        from: fromEmail,
-        to: [email],
-        replyTo: adminEmail,
-        subject: `We've received your enquiry · MentoraX`,
-        html: `
-          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; background: #0c0b16; color: #f4f1ec; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
-            <h2 style="margin: 0 0 12px; color: #d8ff6a;">Hello ${name},</h2>
-            <p style="font-size: 15px; line-height: 1.6; color: #f4f1ec;">Thank you for reaching out to MentoraX. We've received your enquiry regarding <strong>${interest || 'our programs'}</strong> for ${exam ? `<strong>${exam}</strong>` : 'your preparation'}.</p>
-            <p style="font-size: 15px; line-height: 1.6; color: #a8a3bb;">Our team will review your message and will get back to you soon.</p>
-            <div style="background: rgba(155,138,255,0.08); padding: 14px 18px; border-radius: 8px; margin: 20px 0; border: 1px solid rgba(155,138,255,0.2);">
-              <p style="margin: 0; color: #9b8aff; font-size: 14px; font-weight: 500;">Need immediate assistance?</p>
-              <p style="margin: 4px 0 0; color: #f4f1ec; font-size: 13px;">Feel free to reply directly to this email or write to <a href="mailto:${adminEmail}" style="color: #d8ff6a;">${adminEmail}</a>.</p>
-            </div>
-            <p style="margin-top: 24px; color: #a8a3bb; font-size: 13px;">Warm regards,<br><strong style="color: #f4f1ec;">The MentoraX Team</strong><br><em>Research & Development Mindset</em></p>
-          </div>
-        `,
-      })
-    } else {
-      console.log('RESEND_API_KEY not configured. Mocking contact form submission:', {
+    if (!apiKey) {
+      console.error('[contact] RESEND_API_KEY missing — enquiry stored in logs only:', {
         name,
         email,
-        phone,
-        exam,
-        interest,
+        phone: body.phone,
+        exam: body.exam,
+        interest: body.interest,
         message,
         dispatchedTo: adminEmail,
       })
+      return res.status(200).json({
+        success: true,
+        emailDelivered: false,
+        message: 'Enquiry received. Email delivery is not configured, so our team will follow up manually.',
+      })
     }
+
+    const owner = await sendEmail({
+      apiKey,
+      senders,
+      to: [adminEmail],
+      subject: `[MentoraX enquiry] ${body.interest || 'General'} — ${name}`,
+      html: renderContactAdminEmail({
+        name,
+        email,
+        phone: body.phone,
+        exam: body.exam,
+        interest: body.interest,
+        message,
+        dateStr,
+      }),
+      replyTo: email,
+    })
+
+    const student = await sendEmail({
+      apiKey,
+      senders,
+      to: [email],
+      subject: "We've received your enquiry · MentoraX",
+      html: renderContactAckEmail({ name, interest: body.interest, exam: body.exam }),
+      replyTo: adminEmail,
+    })
+
+    if (!owner.ok) console.error('[contact] owner notification failed:', owner.failures)
 
     return res.status(200).json({
       success: true,
+      emailDelivered: student.ok,
+      adminNotified: owner.ok,
       message: 'Enquiry submitted successfully. We will get back to you shortly.',
     })
-  } catch (err: unknown) {
-    console.error('Contact API Error:', err)
+  } catch (err) {
+    console.error('[contact] failed:', err)
     return res.status(500).json({
-      error: 'Failed to process enquiry. Please write directly to managementrajiiserit@gmail.com',
+      error: `Failed to process enquiry. Please write directly to ${SUPPORT_EMAIL}`,
     })
   }
 }

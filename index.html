@@ -29,7 +29,9 @@
       <textarea name="message"></textarea>
       <input name="bot-field" />
     </form>
-    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <!-- Razorpay's checkout script is injected on demand by the checkout page
+         (see src/components/Checkout.tsx), so routes that never take a payment
+         do not download or parse it. -->
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

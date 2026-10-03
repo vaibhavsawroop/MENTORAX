@@ -86,6 +86,36 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react(), localApi()],
+    build: {
+      // three.js alone is ~870 kB minified. It is isolated in `vendor-3d` and
+      // only fetched by the lazily-imported hero scene, so the size is expected
+      // rather than a sign that something leaked into the entry chunk.
+      chunkSizeWarningLimit: 900,
+      rollupOptions: {
+        output: {
+          /**
+           * Split vendor code into stable chunks.
+           *
+           * Before this, every dependency shared one ~590 kB entry chunk, so a
+           * one-line app change invalidated the whole download and the browser
+           * had to parse three.js-adjacent code on the critical path. Grouping by
+           * library keeps long-lived code cached and lets the parser work in
+           * parallel. `three`/`@react-three` are isolated so they are fetched
+           * only by the lazily-imported hero scene, never at first paint.
+           */
+          manualChunks(id) {
+            if (!id.includes('node_modules')) return undefined
+            if (/node_modules[\\/](three|@react-three)[\\/]/.test(id)) return 'vendor-3d'
+            if (/node_modules[\\/](gsap|framer-motion|lenis)[\\/]/.test(id)) return 'vendor-motion'
+            if (/node_modules[\\/](react|react-dom|react-router|react-router-dom|scheduler)[\\/]/.test(id)) {
+              return 'vendor-react'
+            }
+            if (/node_modules[\\/]lucide-react[\\/]/.test(id)) return 'vendor-icons'
+            return undefined
+          },
+        },
+      },
+    },
     server: {
       host: '0.0.0.0',
       port: 5000,

@@ -19,8 +19,14 @@ import {
   MapPin,
   Package,
   MessageCircle,
+  TriangleAlert,
+  CircleCheck,
+  Copy,
+  ScanLine,
+  Wifi,
 } from 'lucide-react'
 import confetti from 'canvas-confetti'
+import gsap from 'gsap'
 import { Link, useSearchParams } from 'react-router-dom'
 
 export type ProductItem = {
@@ -34,6 +40,11 @@ export type ProductItem = {
   features: string[]
   forWhom?: string
   duration?: string
+}
+
+/** Ids that appear in links shared before the catalogue changed. */
+export const PRODUCT_ALIASES: Record<string, string> = {
+  'nest-pyq-book': 'iat-qb-2027',
 }
 
 export const PRODUCTS: Record<string, ProductItem> = {
@@ -52,33 +63,33 @@ export const PRODUCTS: Record<string, ProductItem> = {
       'Physical paperback shipped to your address',
     ],
   },
-  'nest-pyq-book': {
-    id: 'nest-pyq-book',
-    name: "NEST PYQ's Solution Book",
-    subtitle: 'Comprehensive Solved Question Bank · 2017–2024 · Paperback',
-    price: 499,
-    originalPrice: 999,
+  'iat-qb-2027': {
+    id: 'iat-qb-2027',
+    name: 'IAT 2027: Master Question Bank',
+    subtitle: '3,450 Chapter-Wise Questions · 463 Pages · Paperback',
+    price: 999,
+    originalPrice: 1499,
     type: 'book',
-    tag: 'Popular',
+    tag: 'New · 2026 Edition',
     features: [
-      '8 Years of Authentic NEST Papers (2017–2024)',
-      'In-depth step-by-step scientific explanations',
-      'High-yield concepts & exam trend analysis',
-      'Physical paperback shipped to your address',
+      '3,450 chapter-wise questions · Physics, Chemistry, Maths & Biology',
+      '10-Year Empirical Trend Analysis (2017–2026)',
+      'Diagnostic master answer keys after every chapter',
+      'Balanced PCMB format · 463-page physical paperback',
     ],
   },
   'all-pyq-combo': {
     id: 'all-pyq-combo',
-    name: 'IAT + NEST Mega Book Combo',
-    subtitle: 'Complete 2-in-1 PYQ Solution Library · Paperback',
-    price: 799,
-    originalPrice: 1499,
+    name: 'IAT PYQ + IAT 2027 Question Bank Combo',
+    subtitle: 'Both IAT paperbacks · Complete 2-in-1 practice library',
+    price: 1199,
+    originalPrice: 1498,
     type: 'book',
-    tag: 'Save ₹199',
+    tag: 'Save ₹299',
     features: [
-      'Both IAT & NEST Complete Books (2017–2024)',
-      'Over 1,200+ detailed solved questions',
-      'Concept maps & shortcut techniques',
+      'Both IAT paperbacks — PYQ Solutions + 2027 Master Question Bank',
+      '3,450 chapter-wise questions plus fully solved past papers',
+      'Trend analysis, answer keys and concept-building approach',
       'Both physical paperbacks shipped to your address',
     ],
   },
@@ -140,6 +151,95 @@ export const PRODUCTS: Record<string, ProductItem> = {
   },
 }
 
+type RazorpayCheckoutResponse = {
+  razorpay_order_id: string
+  razorpay_payment_id: string
+  razorpay_signature: string
+}
+
+declare global {
+  interface Window {
+    Razorpay?: new (options: Record<string, unknown>) => {
+      open: () => void
+      on: (event: string, handler: (payload: { error?: { description?: string } }) => void) => void
+    }
+  }
+}
+
+/** Tagged error so the UI can react differently to gateway vs verification problems. */
+class CheckoutError extends Error {
+  kind: 'gateway' | 'verify'
+  paymentId?: string
+
+  constructor(message: string, kind: 'gateway' | 'verify' = 'gateway', paymentId?: string) {
+    super(message)
+    this.name = 'CheckoutError'
+    this.kind = kind
+    this.paymentId = paymentId
+  }
+}
+
+function receiptTimestamp(): string {
+  return new Date().toLocaleString('en-IN', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
+
+/**
+ * Loads Razorpay's checkout script on demand.
+ *
+ * It used to be a blocking <script> in index.html, so every visitor — including
+ * people who never open the checkout — paid for a third-party download and its
+ * main-thread parse. The script is now fetched when a checkout page mounts (and
+ * awaited before opening the modal), which keeps every other route lighter.
+ */
+let razorpayScriptPromise: Promise<void> | null = null
+
+function loadRazorpayScript(): Promise<void> {
+  if (typeof window.Razorpay === 'function') return Promise.resolve()
+  if (razorpayScriptPromise) return razorpayScriptPromise
+
+  razorpayScriptPromise = new Promise<void>((resolve, reject) => {
+    const existing = document.querySelector<HTMLScriptElement>('script[data-razorpay-checkout]')
+    const script = existing ?? document.createElement('script')
+
+    script.addEventListener('load', () => resolve(), { once: true })
+    script.addEventListener(
+      'error',
+      () => {
+        razorpayScriptPromise = null
+        reject(
+          new CheckoutError(
+            'The secure payment window could not load. Check your connection, then try again.'
+          )
+        )
+      },
+      { once: true }
+    )
+
+    if (!existing) {
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js'
+      script.async = true
+      script.dataset.razorpayCheckout = 'true'
+      document.head.appendChild(script)
+    }
+  })
+
+  return razorpayScriptPromise
+}
+
+export function resolveProductId(candidate?: string | null, fallback: string = 'iat-pyq-book'): string {
+  if (!candidate) return fallback
+  if (PRODUCTS[candidate]) return candidate
+  const aliased = PRODUCT_ALIASES[candidate]
+  if (aliased && PRODUCTS[aliased]) return aliased
+  return fallback
+}
+
 export function CheckoutModal({
   isOpen,
   onClose,
@@ -182,14 +282,12 @@ export function CheckoutContent({
 }) {
   const [searchParams] = useSearchParams()
   const queryProduct = searchParams.get('product') || initialProductId
-  const [selectedProductId, setSelectedProductId] = useState<string>(
-    PRODUCTS[queryProduct] ? queryProduct : 'iat-pyq-book'
-  )
+  const [selectedProductId, setSelectedProductId] = useState<string>(resolveProductId(queryProduct))
 
   const product = PRODUCTS[selectedProductId] || PRODUCTS['iat-pyq-book']
   const isBookOrder = product.type === 'book'
 
-  const [step, setStep] = useState<'form' | 'processing' | 'receipt'>('form')
+  const [step, setStep] = useState<'form' | 'processing' | 'verifying' | 'receipt'>('form')
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -207,12 +305,39 @@ export function CheckoutContent({
     receiptNo: string
     transactionId: string
     date: string
-    accessPin: string
     whatsappLink?: string
     productType: string
+    /** True only for the opt-in offline simulation (ALLOW_MOCK_PAYMENTS=true). */
+    demo?: boolean
+    /** Batch paid, but access still needs a manual check by the team. */
+    pendingManualReview?: boolean
+    /** Whether the receipt email actually left the server. */
+    emailDelivered?: boolean
   } | null>(null)
 
-  const receiptRef = useRef<HTMLDivElement>(null)
+  /**
+   * Shown whenever the flow stops early. A real payment is never reported as a
+   * failure: if money may have moved we surface the payment id and ask the
+   * student to contact us instead of inventing a receipt.
+   */
+  const [flowError, setFlowError] = useState<{
+    title: string
+    detail: string
+    paymentId?: string
+    retryable?: boolean
+  } | null>(null)
+
+  const machineRef = useRef<HTMLDivElement>(null)
+  const paperRef = useRef<HTMLDivElement>(null)
+  const heatRef = useRef<HTMLDivElement>(null)
+  const statusRef = useRef<HTMLSpanElement>(null)
+  const counterRef = useRef<HTMLSpanElement>(null)
+
+  // Warm the gateway script up while the student fills the form, so submitting
+  // never waits on a cold download. Failures are surfaced at submit time.
+  useEffect(() => {
+    void loadRazorpayScript().catch(() => undefined)
+  }, [])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target
@@ -274,20 +399,26 @@ export function CheckoutContent({
         }),
       })
 
+      const orderData = await orderRes.json().catch(() => ({}))
+
       if (!orderRes.ok) {
-        const errData = await orderRes.json().catch(() => ({}))
-        throw new Error(errData.error || 'Failed to create order')
+        throw new CheckoutError(
+          orderData.error || 'We could not reach the payment server. Please try again in a moment.'
+        )
       }
 
-      const orderData = await orderRes.json()
-
-      // 2. If mock mode (no Razorpay keys configured), show simulated receipt
+      // 2. Offline simulation — only when the deployment explicitly opted in
+      //    with ALLOW_MOCK_PAYMENTS=true. Production never lands here.
       if (orderData.mock) {
-        await simulatePaymentAndShowReceipt(orderData.orderId, shippingAddress)
+        showDemoReceipt(orderData.orderId)
         return
       }
 
-      // 3. Open Razorpay checkout modal for real payment
+      if (!orderData.orderId || !orderData.keyId) {
+        throw new CheckoutError('The payment gateway did not return a usable order. Please try again.')
+      }
+
+      // 3. Open the Razorpay checkout modal for the real payment
       const rzpOptions = {
         key: orderData.keyId,
         amount: orderData.amount,
@@ -309,89 +440,64 @@ export function CheckoutContent({
             setStep('form')
           },
         },
-        handler: async (response: {
-          razorpay_order_id: string
-          razorpay_payment_id: string
-          razorpay_signature: string
-        }) => {
-          // 4. Payment succeeded — verify on backend + send receipt emails
-          try {
-            const verifyRes = await fetch('/api/payment/verify', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
-                studentName: formData.name,
-                studentEmail: formData.email,
-                studentPhone: formData.phone,
-                productId: product.id,
-                amount: product.price,
-                shippingAddress,
-              }),
-            })
-
-            const verifyData = await verifyRes.json()
-
-            if (verifyData.success && verifyData.verified) {
-              setReceiptData({
-                receiptNo: verifyData.receiptNo,
-                transactionId: verifyData.transactionId,
-                date: new Date().toLocaleString('en-IN', {
-                  day: 'numeric',
-                  month: 'short',
-                  year: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit',
-                }),
-                accessPin: `MTX-${Math.floor(100000 + Math.random() * 900000)}`,
-                whatsappLink: verifyData.whatsappLink,
-                productType: verifyData.productType || product.type,
-              })
-              setStep('receipt')
-              triggerConfetti()
-            } else {
-              alert('Payment verification failed. Please contact managementrajiiserit@gmail.com')
-              setStep('form')
-            }
-          } catch {
-            alert('Could not verify payment. Please contact managementrajiiserit@gmail.com with your payment ID: ' + response.razorpay_payment_id)
-            setStep('form')
-          }
+        // 4. Razorpay says the money moved — confirm it server-side, then print.
+        handler: (response: RazorpayCheckoutResponse) => {
+          void verifyPayment(response, shippingAddress)
         },
       }
 
+      // Fetch the gateway script only now (it is no longer on every page).
+      await loadRazorpayScript()
+
+      if (typeof window.Razorpay !== 'function') {
+        throw new CheckoutError(
+          'The secure payment window could not load. Please check your connection, disable any ad-blocker for this page and try again.'
+        )
+      }
+
       // Open the Razorpay modal
-      const rzp = new (window as any).Razorpay(rzpOptions)
-      rzp.on('payment.failed', (resp: any) => {
-        alert(`Payment failed: ${resp.error.description}. Please try again.`)
+      const rzp = new window.Razorpay(rzpOptions)
+      rzp.on('payment.failed', (resp) => {
         setStep('form')
+        setFlowError({
+          title: 'Payment was not completed',
+          detail:
+            resp?.error?.description ||
+            'Your bank declined or cancelled the payment. No money has left your account — you can try again with another method.',
+          retryable: true,
+        })
       })
       rzp.open()
-
-    } catch {
-      // Backend not available (local dev without env vars) — fallback simulation
-      await simulatePaymentAndShowReceipt(`MTX_ORD_${Date.now().toString().slice(-6)}`, shippingAddress)
+    } catch (err) {
+      setStep('form')
+      const failure = err instanceof CheckoutError ? err : null
+      setFlowError({
+        title: 'We could not start the secure payment',
+        detail:
+          failure?.message ||
+          'The payment server did not respond. Nothing has been charged — please try again in a moment.',
+        retryable: true,
+      })
     }
   }
 
-  /** Fallback for local dev / mock mode when Razorpay keys aren't configured */
-  const simulatePaymentAndShowReceipt = async (orderId: string, shippingAddress?: any) => {
-    await new Promise((r) => setTimeout(r, 1600))
-    const txnId = `PAY_${Math.random().toString(36).substring(2, 9).toUpperCase()}`
-    const recNo = `INV-2026-${Math.floor(10000 + Math.random() * 90000)}`
-    const pin = `MTX-${Math.floor(100000 + Math.random() * 900000)}`
+  /**
+   * Called from Razorpay's success handler. The receipt animation only starts
+   * once this returns `verified: true` — that is the whole point: nothing is
+   * printed, emailed or celebrated before the backend confirms the signature.
+   */
+  const verifyPayment = async (response: RazorpayCheckoutResponse, shippingAddress?: Record<string, string>) => {
+    setFlowError(null)
+    setStep('verifying')
 
-    // Try to call verify endpoint even in mock mode (for email dispatch)
     try {
       const verifyRes = await fetch('/api/payment/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          razorpay_order_id: orderId,
-          razorpay_payment_id: txnId,
-          razorpay_signature: 'mock_signature',
+          razorpay_order_id: response.razorpay_order_id,
+          razorpay_payment_id: response.razorpay_payment_id,
+          razorpay_signature: response.razorpay_signature,
           studentName: formData.name,
           studentEmail: formData.email,
           studentPhone: formData.phone,
@@ -400,38 +506,52 @@ export function CheckoutContent({
           shippingAddress,
         }),
       })
-      const verifyData = await verifyRes.json()
+
+      const verifyData = await verifyRes.json().catch(() => ({}))
+
+      if (!verifyRes.ok || !verifyData.success || !verifyData.verified) {
+        throw new CheckoutError(
+          verifyData.error || 'The payment server could not confirm this transaction.',
+          'verify',
+          response.razorpay_payment_id
+        )
+      }
+
       setReceiptData({
-        receiptNo: verifyData.receiptNo || recNo,
-        transactionId: verifyData.transactionId || txnId,
-        date: new Date().toLocaleString('en-IN', {
-          day: 'numeric',
-          month: 'short',
-          year: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit',
-        }),
-        accessPin: pin,
+        receiptNo: verifyData.receiptNo,
+        transactionId: verifyData.transactionId || response.razorpay_payment_id,
+        date: receiptTimestamp(),
         whatsappLink: verifyData.whatsappLink,
         productType: verifyData.productType || product.type,
+        pendingManualReview: Boolean(verifyData.pendingManualReview),
+        emailDelivered: Boolean(verifyData.emailDelivered),
       })
-    } catch {
-      setReceiptData({
-        receiptNo: recNo,
-        transactionId: txnId,
-        date: new Date().toLocaleString('en-IN', {
-          day: 'numeric',
-          month: 'short',
-          year: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit',
-        }),
-        accessPin: pin,
-        productType: product.type,
+      setStep('receipt')
+    } catch (err) {
+      setStep('form')
+      const failure = err instanceof CheckoutError ? err : null
+      // The money may already have moved, so never claim the payment failed.
+      setFlowError({
+        title: 'Payment received — confirmation pending',
+        detail:
+          (failure?.message || 'We could not confirm this transaction automatically.') +
+          ' Your payment ID is shown below. Send it to us and we will complete your order manually within a few hours.',
+        paymentId: failure?.paymentId || response.razorpay_payment_id,
+        retryable: false,
       })
     }
+  }
+
+  /** Offline simulation used only when the server opted in via ALLOW_MOCK_PAYMENTS. */
+  const showDemoReceipt = (orderId: string) => {
+    setReceiptData({
+      receiptNo: `DEMO-${Math.floor(10000 + Math.random() * 90000)}`,
+      transactionId: orderId,
+      date: receiptTimestamp(),
+      productType: product.type,
+      demo: true,
+    })
     setStep('receipt')
-    triggerConfetti()
   }
 
   const triggerConfetti = () => {
@@ -463,6 +583,167 @@ export function CheckoutContent({
   const handlePrint = () => {
     window.print()
   }
+
+  /**
+   * GSAP thermal-printer sequence.
+   *
+   * It only runs for `step === 'receipt'`, which is set exclusively after the
+   * backend confirms a payment — the animation is a *result* of a verified
+   * order, never the reaction to a click.
+   *
+   * The motion is modelled on how a real receipt printer behaves:
+   *   • the unit powers up and its status lamp warms from amber to green,
+   *   • a stepper motor pulls the roll through the slot in discrete steps,
+   *     so the strip advances in small jumps with a mechanical jitter,
+   *   • the thermal head "writes" each line at the slot as the strip clears it,
+   *   • a feed counter tracks the percentage of the receipt that has emerged,
+   *   • the strip settles with a small bounce once the roll stops.
+   */
+  useEffect(() => {
+    if (step !== 'receipt' || !receiptData) return
+
+    const machine = machineRef.current
+    const paper = paperRef.current
+    const heat = heatRef.current
+    if (!machine || !paper) return
+
+    const setStatus = (text: string) => {
+      if (statusRef.current) statusRef.current.textContent = text
+    }
+    const setCounter = (percent: number) => {
+      if (counterRef.current) counterRef.current.textContent = `${String(Math.round(percent)).padStart(3, '0')}%`
+    }
+    const setFeed = (remaining: number) => {
+      paper.style.clipPath = `inset(0 0 ${remaining}% 0)`
+    }
+
+    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (prefersReduced) {
+      // Respect the OS setting: show the finished receipt, skip the theatre.
+      gsap.set(machine, { opacity: 1, y: 0, scale: 1 })
+      gsap.set(paper, { x: 0, y: 0, rotate: 0 })
+      if (heat) gsap.set(heat, { opacity: 0 })
+      setFeed(0)
+      setCounter(100)
+      setStatus('DONE')
+      return
+    }
+
+    setFeed(100)
+    setCounter(0)
+    setStatus('WARMING UP')
+    paper.style.willChange = 'clip-path, transform'
+
+    const ctx = gsap.context(() => {
+      const feed = { pct: 0 }
+      const counter = { pct: 0 }
+
+      // Mechanical vibration while the motor runs — killed once feeding stops.
+      const paperJitter = gsap.to(paper, {
+        x: 'random(-0.7, 0.7)',
+        duration: 0.05,
+        repeat: -1,
+        yoyo: true,
+        ease: 'none',
+        paused: true,
+      })
+      const bodyRumble = gsap.to(machine, {
+        y: 'random(-0.8, 0.8)',
+        duration: 0.07,
+        repeat: -1,
+        yoyo: true,
+        ease: 'none',
+        paused: true,
+      })
+
+      const tl = gsap.timeline({
+        onComplete: () => {
+          paper.style.willChange = ''
+          triggerConfetti()
+        },
+      })
+
+      // 1 · the unit settles onto the desk and runs a self-test
+      tl.fromTo(
+        machine,
+        { y: 44, opacity: 0, scale: 0.96 },
+        { y: 0, opacity: 1, scale: 1, duration: 0.55, ease: 'power3.out' }
+      )
+      tl.add(() => machine.classList.add('is-powered'), '<0.15')
+      tl.to(machine, { x: 1.6, duration: 0.05, repeat: 5, yoyo: true, ease: 'none' }, '<')
+      tl.add(() => setStatus('READY'), '>-0.1')
+
+      // 2 · feed: discrete stepper steps, synced with the counter and heat line
+      const feedDuration = 3.4
+      tl.to(
+        feed,
+        {
+          pct: 100,
+          duration: feedDuration,
+          ease: 'steps(34)',
+          onUpdate: () => setFeed(100 - feed.pct),
+        },
+        'feed'
+      )
+      tl.to(
+        counter,
+        {
+          pct: 100,
+          duration: feedDuration,
+          ease: 'steps(34)',
+          onUpdate: () => setCounter(counter.pct),
+        },
+        'feed'
+      )
+      tl.fromTo(
+        paper,
+        { y: -14 },
+        { y: 0, duration: feedDuration, ease: 'steps(34)' },
+        'feed'
+      )
+      if (heat) {
+        tl.fromTo(
+          heat,
+          { top: '0%', opacity: 0.9 },
+          { top: '100%', duration: feedDuration, ease: 'steps(34)' },
+          'feed'
+        )
+      }
+      tl.add(() => {
+        setStatus('PRINTING')
+        machine.classList.add('is-printing')
+        paperJitter.play()
+        bodyRumble.play()
+      }, 'feed')
+
+      // 3 · motor brakes, strip settles with a short mechanical bounce
+      tl.add(() => {
+        paperJitter.kill()
+        bodyRumble.kill()
+        gsap.set(paper, { x: 0 })
+        gsap.set(machine, { x: 0, y: 0 })
+        machine.classList.remove('is-printing')
+        machine.classList.add('is-done')
+      }, 'feed+=3.4')
+      tl.add(() => {
+        setStatus('DONE')
+        setCounter(100)
+      }, 'feed+=3.4')
+      tl.to(paper, { rotate: 0.35, duration: 0.16, ease: 'power2.out' }, 'feed+=3.42')
+      tl.to(paper, { rotate: 0, y: -3, duration: 0.34, ease: 'back.out(3)' }, '>-0.02')
+      tl.to(paper, { y: 0, duration: 0.26, ease: 'power2.inOut' }, '>-0.05')
+      if (heat) tl.to(heat, { opacity: 0, duration: 0.3 }, '<')
+      tl.to(paper, { scaleY: 1.006, duration: 0.12, ease: 'power1.out' }, '<')
+      tl.to(paper, { scaleY: 1, duration: 0.3, ease: 'power2.out' })
+    }, machineRef)
+
+    return () => {
+      ctx.revert()
+      machine.classList.remove('is-powered', 'is-printing', 'is-done')
+      paper.style.clipPath = ''
+      paper.style.willChange = ''
+    }
+  }, [step, receiptData])
 
   // Split products by type for display
   const bookProducts = Object.values(PRODUCTS).filter(p => p.type === 'book')
@@ -501,9 +782,9 @@ export function CheckoutContent({
                       <p className="checkout-card-subtitle">{item.subtitle}</p>
                     </div>
                     <div className="checkout-card-pricing">
-                      <strong className="checkout-current-price">₹{item.price}</strong>
+                      <strong className="checkout-current-price">₹{item.price.toLocaleString('en-IN')}</strong>
                       {item.originalPrice && (
-                        <span className="checkout-original-price">₹{item.originalPrice}</span>
+                        <span className="checkout-original-price">₹{item.originalPrice.toLocaleString('en-IN')}</span>
                       )}
                     </div>
                   </div>
@@ -574,6 +855,38 @@ export function CheckoutContent({
             </div>
 
             <form className="checkout-form" onSubmit={handleProceedToPayment}>
+              {/* Anything that stopped the flow is explained here instead of
+                  quietly printing a receipt for a payment that never happened. */}
+              {flowError && (
+                <div className="checkout-alert" role="alert">
+                  <TriangleAlert size={18} className="checkout-alert-icon" />
+                  <div className="checkout-alert-body">
+                    <strong>{flowError.title}</strong>
+                    <p>{flowError.detail}</p>
+                    {flowError.paymentId && (
+                      <button
+                        type="button"
+                        className="checkout-alert-copy"
+                        onClick={() => {
+                          void navigator.clipboard?.writeText(flowError.paymentId as string)
+                        }}
+                      >
+                        <Copy size={13} />
+                        <span>{flowError.paymentId}</span>
+                      </button>
+                    )}
+                    <div className="checkout-alert-links">
+                      <a href="mailto:managementrajiiserit@gmail.com">Email the team</a>
+                      {flowError.retryable && (
+                        <button type="button" onClick={() => setFlowError(null)}>
+                          Dismiss and try again
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div className="form-group">
                 <label>
                   Full Student Name <span className="req">*</span>
@@ -760,7 +1073,7 @@ export function CheckoutContent({
         </div>
       )}
 
-      {/* Step: Processing */}
+      {/* Step: Processing — opening the gateway */}
       {step === 'processing' && (
         <div className="checkout-processing-view">
           <div className="processing-spinner">
@@ -774,37 +1087,88 @@ export function CheckoutContent({
         </div>
       )}
 
+      {/* Step: Verifying — Razorpay says paid; the server is confirming it */}
+      {step === 'verifying' && (
+        <div className="checkout-processing-view">
+          <div className="processing-spinner verifying">
+            <Lock className="spin-icon slow" size={38} />
+          </div>
+          <h3>Confirming your payment…</h3>
+          <p>
+            Verifying the transaction with Razorpay and emailing your receipt to{' '}
+            <strong>{formData.email || 'your inbox'}</strong>. Please keep this tab open.
+          </p>
+          <div className="processing-bar">
+            <div className="processing-progress-fill verifying" />
+          </div>
+        </div>
+      )}
+
       {/* Step: SKEUOMORPHIC RECEIPT PRINTER ANIMATION */}
       {step === 'receipt' && receiptData && (
         <div className="receipt-view-wrapper">
           <div className="receipt-celebration-kicker">
             <div className="kicker-pill">
               <Sparkles size={16} />
-              <span>Payment Successful</span>
+              <span>{receiptData.demo ? 'Demo Mode' : 'Payment Successful'}</span>
             </div>
-            <h2>Order Verified &amp; Confirmed!</h2>
+            <h2>{receiptData.demo ? 'Simulated receipt' : 'Order Verified & Confirmed!'}</h2>
             <p>
-              {receiptData.productType === 'book'
-                ? 'Your official receipt has been generated. Your book will be shipped within 3–5 business days.'
-                : 'Your receipt has been generated. Join your batch WhatsApp group below to get started!'}
+              {receiptData.demo
+                ? 'This deployment opted into offline simulation, so no money moved and no email was sent. Nothing on this page is a real purchase.'
+                : receiptData.productType === 'book'
+                  ? 'Your official receipt has been generated. Your book will be shipped within 3–5 business days.'
+                  : 'Your receipt has been generated. Join your batch WhatsApp group below to get started!'}
             </p>
           </div>
 
-          {/* The Thermal Printer Machine Component */}
-          <div className="printer-machine">
-            {/* The slot through which paper slides out */}
-            <div className="printer-slot">
-              <div className="printer-slot-light" />
+          {/* Honest status chips: what actually happened behind the animation */}
+          <div className="receipt-status-row">
+            {receiptData.demo ? (
+              <span className="receipt-status-chip warn">
+                <TriangleAlert size={13} /> No payment taken · no email sent
+              </span>
+            ) : (
+              <>
+                <span className="receipt-status-chip ok">
+                  <CircleCheck size={13} /> Payment verified by Razorpay
+                </span>
+                <span className={`receipt-status-chip ${receiptData.emailDelivered ? 'ok' : 'warn'}`}>
+                  {receiptData.emailDelivered ? <Mail size={13} /> : <TriangleAlert size={13} />}
+                  {receiptData.emailDelivered
+                    ? 'Receipt emailed to you'
+                    : 'Receipt email is being retried — receipt stays available here'}
+                </span>
+                {receiptData.productType === 'batch' && receiptData.pendingManualReview && (
+                  <span className="receipt-status-chip warn">
+                    <TriangleAlert size={13} /> Batch link pending a quick manual check
+                  </span>
+                )}
+              </>
+            )}
+          </div>          {/* The thermal printer machine — driven entirely by the GSAP feed timeline */}
+          <div className="printer-machine" ref={machineRef}>
+            <div className="printer-body">
+              <div className="printer-plate">
+                <span className="printer-brand">MentoraX</span>
+                <span className="printer-model">Thermal 58mm · MTX-PRINT</span>
+              </div>
+
+              <div className="printer-display" role="status" aria-live="polite">
+                <span className="printer-led" />
+                <span className="printer-status" ref={statusRef}>READY</span>
+                <span className="printer-feed-count" ref={counterRef}>000%</span>
+              </div>
+
+              {/* Slot the strip feeds through */}
+              <div className="printer-slot">
+                <span className="printer-slot-glow" aria-hidden="true" />
+              </div>
             </div>
 
-            {/* The Sliding Receipt Paper */}
-            <motion.div
-              ref={receiptRef}
-              className="receipt-paper"
-              initial={{ y: -360, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ duration: 2.4, ease: [0.16, 1, 0.3, 1] }}
-            >
+            {/* Output bay: the paper and the heat line that trails the print edge */}
+            <div className="printer-output">
+              <div className="receipt-paper" ref={paperRef}>
               {/* Serrated top edge */}
               <div className="receipt-serrated-edge top" />
 
@@ -916,13 +1280,22 @@ export function CheckoutContent({
 
                 <div className="receipt-footer-note">
                   <p>Thank you for placing your trust in MentoraX.</p>
-                  <p>A receipt copy has been emailed to <b>{formData.email}</b></p>
+                  <p>
+                    {receiptData.demo
+                      ? 'Demo mode · no payment was taken and no email was sent'
+                      : receiptData.emailDelivered
+                        ? <>A receipt copy has been emailed to <b>{formData.email}</b></>
+                        : <>Keep or print this copy — our team is re-sending the email receipt now</>}
+                  </p>
                 </div>
               </div>
 
-              {/* Serrated bottom edge */}
-              <div className="receipt-serrated-edge bottom" />
-            </motion.div>
+                {/* Serrated bottom edge — revealed at tear-off */}
+                <div className="receipt-serrated-edge bottom" />
+              </div>
+
+              <div className="printer-heat-line" ref={heatRef} aria-hidden="true" />
+            </div>
           </div>
 
           {/* Action buttons */}
