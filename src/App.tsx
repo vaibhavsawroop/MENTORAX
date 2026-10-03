@@ -72,9 +72,9 @@ type MentorCard = {
 }
 
 const mentors: MentorCard[] = [
-  { initials: 'R', name: 'Raj', role: 'Mathematics Mentor', detail: 'IISER TVM · Mentored 2,200+ students across India with precision guidance on strategy, schedule optimization, and conceptual clarity.', tone: 'violet', portrait: '/mentors/raj.webp', portraitAlt: 'Raj, MentoraX Mathematics Mentor', subjects: ['IAT Maths', 'Strategy', 'Schedule optimization'] },
-  { initials: 'B', name: 'Bhavesha', role: 'Physics Mentor', detail: 'IISER TVM · Currently leading research projects at ISRO. Core guidance on exam methodology and physics orientation.', tone: 'sage', portrait: '/mentors/bhavesha.webp', portraitAlt: 'Bhavesha, MentoraX Physics Mentor', subjects: ['Exam methodology', 'Physics orientation', 'ISRO research'] },
-  { initials: 'AT', name: 'Aditya', role: 'Chemistry Mentor', detail: 'IIT Madras · AIR 544 in IAT 2026. Structured preparation blueprints for Physical, Organic, and Inorganic Chemistry.', tone: 'coral', portrait: '/mentors/aditya-thakur.webp', portraitAlt: 'Aditya, MentoraX Chemistry Mentor', subjects: ['Physical', 'Organic', 'Inorganic'] },
+  { initials: 'R', name: 'Raj', role: 'Mathematics Mentor', detail: 'IISER TVM · Mentored 2,200+ students across India with precision guidance on strategy, schedule optimization, and conceptual clarity.', tone: 'violet', portrait: '/mentors/raj.jpg', portraitAlt: 'Raj, MentoraX Mathematics Mentor', subjects: ['IAT Maths', 'Strategy', 'Schedule optimization'] },
+  { initials: 'B', name: 'Bhavesha', role: 'Physics Mentor', detail: 'IISER TVM · Currently leading research projects at ISRO. Core guidance on exam methodology and physics orientation.', tone: 'sage', portrait: '/mentors/bhavesha.jpg', portraitAlt: 'Bhavesha, MentoraX Physics Mentor', subjects: ['Exam methodology', 'Physics orientation', 'ISRO research'] },
+  { initials: 'AT', name: 'Aditya', role: 'Chemistry Mentor', detail: 'IIT Madras · AIR 544 in IAT 2026. Structured preparation blueprints for Physical, Organic, and Inorganic Chemistry.', tone: 'coral', portrait: '/mentors/aditya-thakur.jpg', portraitAlt: 'Aditya, MentoraX Chemistry Mentor', subjects: ['Physical', 'Organic', 'Inorganic'] },
   { initials: 'SB', name: 'Sparsh', role: 'Biology Mentor', detail: 'IISER Tirupati · Targeted NCERT retention tactics and high-efficiency revision roadmaps for Biology.', tone: 'ink', subjects: ['NCERT Biology', 'Retention tactics', 'Revision roadmaps'] },
 ]
 
@@ -1059,10 +1059,10 @@ function Mentors() { return <><div className="page-intro-compact"><PageIntro ind
 
 // Add `image: '/images/team/<filename>.jpg'` to each entry when portrait photos are available
 const hoverTeamMembers: HoverMemberItem[] = [
-  { name: 'Raj', role: 'CEO & Maths Mentor', initials: 'R', image: '/mentors/raj.webp' },
-  { name: 'Dipti', role: 'CMO', initials: 'D', image: '/mentors/dipti.webp' },
-  { name: 'Bhavesha', role: 'Physics Mentor', initials: 'B', image: '/mentors/bhavesha.webp' },
-  { name: 'Aditya Thakur', role: 'Chemistry Mentor', initials: 'AT', image: '/mentors/aditya-thakur.webp' },
+  { name: 'Raj', role: 'CEO & Maths Mentor', initials: 'R', image: '/mentors/raj.jpg' },
+  { name: 'Dipti', role: 'CMO', initials: 'D', image: '/mentors/dipti.jpg' },
+  { name: 'Bhavesha', role: 'Physics Mentor', initials: 'B', image: '/mentors/bhavesha.jpg' },
+  { name: 'Aditya Thakur', role: 'Chemistry Mentor', initials: 'AT', image: '/mentors/aditya-thakur.jpg' },
   { name: 'Sparsh Bansal', role: 'Biology Mentor', initials: 'SB' },
 ]
 
