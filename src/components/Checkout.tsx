@@ -179,6 +179,15 @@ class CheckoutError extends Error {
   }
 }
 
+/**
+ * The receipt's printable lines — each one "inks in" as the strip passes the
+ * print head. Group wrappers (meta grid, items table, totals) are excluded so
+ * their children print individually: the texture comes from many small lines,
+ * not three large blocks.
+ */
+const RECEIPT_LINES =
+  ':scope > *:not(.receipt-meta-grid):not(.receipt-items-table):not(.receipt-totals-calc), .meta-row, .item-row, .tot-row'
+
 function receiptTimestamp(): string {
   return new Date().toLocaleString('en-IN', {
     day: 'numeric',
@@ -591,13 +600,20 @@ export function CheckoutContent({
    * backend confirms a payment — the animation is a *result* of a verified
    * order, never the reaction to a click.
    *
-   * The motion is modelled on how a real receipt printer behaves:
+   * How it reads like a real printer (and stays butter smooth):
    *   • the unit powers up and its status lamp warms from amber to green,
-   *   • a stepper motor pulls the roll through the slot in discrete steps,
-   *     so the strip advances in small jumps with a mechanical jitter,
-   *   • the thermal head "writes" each line at the slot as the strip clears it,
-   *   • a feed counter tracks the percentage of the receipt that has emerged,
-   *   • the strip settles with a small bounce once the roll stops.
+   *   • ONE eased value (`feed.pct`) drives the clip-path, the feed counter and
+   *     the printed-line queue from a single clock. Nothing ticks or jumps, so
+   *     the strip accelerates and eases off like a motor, and no effect can
+   *     drift out of sync with the paper,
+   *   • every line of the receipt is measured against the strip, and the moment
+   *     the strip has fed far enough for that line to reach the print head it
+   *     inks in — the receipt is *written* line by line as it emerges,
+   *   • the transaction id is typed out character by character behind a blinking
+   *     caret, one glyph at a time, exactly like a thermal head,
+   *   • the barcode grows outwards from the head,
+   *   • the motor brakes, the strip settles with a short mechanical bounce, and
+   *     the LED turns green.
    */
   useEffect(() => {
     if (step !== 'receipt' || !receiptData) return
@@ -614,20 +630,45 @@ export function CheckoutContent({
       if (counterRef.current) counterRef.current.textContent = `${String(Math.round(percent)).padStart(3, '0')}%`
     }
     const setFeed = (remaining: number) => {
-      paper.style.clipPath = `inset(0 0 ${remaining}% 0)`
+      paper.style.clipPath = `inset(0 0 ${remaining.toFixed(2)}% 0)`
     }
+
+    const inner = paper.querySelector<HTMLElement>('.receipt-inner')
+    const lines = inner ? Array.from(inner.querySelectorAll<HTMLElement>(RECEIPT_LINES)) : []
+    const typedEl = paper.querySelector<HTMLElement>('[data-print="txn"]')
+    const typedText = typedEl?.textContent ?? ''
 
     const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     if (prefersReduced) {
       // Respect the OS setting: show the finished receipt, skip the theatre.
-      gsap.set(machine, { opacity: 1, y: 0, scale: 1 })
-      gsap.set(paper, { x: 0, y: 0, rotate: 0 })
+      gsap.set(machine, { opacity: 1, y: 0, x: 0, scale: 1 })
+      gsap.set(paper, { x: 0, y: 0, rotate: 0, scaleY: 1 })
+      if (lines.length) gsap.set(lines, { opacity: 1, y: 0 })
       if (heat) gsap.set(heat, { opacity: 0 })
       setFeed(0)
       setCounter(100)
       setStatus('DONE')
       return
     }
+
+    /*
+     * Measure once, before any transform is applied: a line is "written" when
+     * the print head (the bottom edge of the revealed strip) reaches its top.
+     * Store fractions of the strip's height, so the timing stays correct at any
+     * screen size and however long this particular receipt happens to be.
+     */
+    const paperRect = paper.getBoundingClientRect()
+    const stripHeight = Math.max(1, paperRect.height)
+    const cues = lines
+      .map((el) => ({
+        el,
+        at: gsap.utils.clamp(
+          0,
+          99,
+          ((el.getBoundingClientRect().top - paperRect.top) / stripHeight) * 100
+        ),
+      }))
+      .sort((a, b) => a.at - b.at)
 
     setFeed(100)
     setCounter(0)
@@ -636,25 +677,89 @@ export function CheckoutContent({
 
     const ctx = gsap.context(() => {
       const feed = { pct: 0 }
-      const counter = { pct: 0 }
+      const barcode = paper.querySelector<HTMLElement>('.receipt-barcode')
 
-      // Mechanical vibration while the motor runs — killed once feeding stops.
+      // Nothing is "printed" yet: every line waits for the head to reach it.
+      if (lines.length) gsap.set(lines, { opacity: 0, y: -3 })
+
+      // One paused ink-in tween per line, played by the queue below.
+      const queue = cues.map(({ el, at }) => ({
+        at,
+        el,
+        ink: gsap.to(el, { opacity: 1, y: 0, duration: 0.34, ease: 'power2.out', paused: true }),
+      }))
+
+      // Richer moves that fire together with the line they belong to.
+      const extras: Array<{ match: Element; anim: gsap.core.Animation }> = []
+      if (barcode) {
+        extras.push({
+          match: barcode,
+          anim: gsap.fromTo(
+            barcode,
+            { scaleX: 0.72, opacity: 0.15 },
+            {
+              scaleX: 1,
+              opacity: 1,
+              transformOrigin: 'left center',
+              duration: 0.36,
+              ease: 'power2.out',
+              paused: true,
+            }
+          ),
+        })
+      }
+      if (typedEl && typedText) {
+        // Typewriter: one glyph at a time, with a whisper of irregularity so it
+        // reads as a print head laying down ink rather than a CSS reveal.
+        typedEl.textContent = ''
+        typedEl.classList.add('is-typing')
+        const typewriter = gsap.timeline({ paused: true })
+        for (let i = 1; i <= typedText.length; i++) {
+          typewriter.call(
+            () => {
+              typedEl.textContent = typedText.slice(0, i)
+            },
+            undefined,
+            (i - 1) * 0.032 + Math.random() * 0.02
+          )
+        }
+        typewriter.call(() => typedEl.classList.remove('is-typing'))
+        extras.push({ match: typedEl, anim: typewriter })
+      }
+
+      // Play every line whose top edge the head has already passed.
+      let cursor = 0
+      const drainInk = (pct: number) => {
+        while (cursor < queue.length && pct >= queue[cursor].at) {
+          const line = queue[cursor]
+          line.ink.play()
+          for (const extra of extras) {
+            if (line.el.contains(extra.match)) extra.anim.play()
+          }
+          cursor += 1
+        }
+      }
+
+      // Mechanical hum while the motor runs — killed once the brake lands.
       const paperJitter = gsap.to(paper, {
-        x: 'random(-0.7, 0.7)',
-        duration: 0.05,
+        x: 'random(-0.55, 0.55)',
+        duration: 0.06,
         repeat: -1,
         yoyo: true,
         ease: 'none',
         paused: true,
       })
       const bodyRumble = gsap.to(machine, {
-        y: 'random(-0.8, 0.8)',
-        duration: 0.07,
+        y: 'random(-0.7, 0.7)',
+        duration: 0.08,
         repeat: -1,
         yoyo: true,
         ease: 'none',
         paused: true,
       })
+
+      const FEED = 3.6
+      const FEED_EASE = 'sine.inOut'
 
       const tl = gsap.timeline({
         onComplete: () => {
@@ -663,49 +768,38 @@ export function CheckoutContent({
         },
       })
 
-      // 1 · the unit settles onto the desk and runs a self-test
+      // 1 · the unit settles onto the desk, the lamp warms up, a quick self-test
       tl.fromTo(
         machine,
-        { y: 44, opacity: 0, scale: 0.96 },
-        { y: 0, opacity: 1, scale: 1, duration: 0.55, ease: 'power3.out' }
+        { y: 46, opacity: 0, scale: 0.97 },
+        { y: 0, opacity: 1, scale: 1, duration: 0.72, ease: 'power4.out' }
       )
-      tl.add(() => machine.classList.add('is-powered'), '<0.15')
-      tl.to(machine, { x: 1.6, duration: 0.05, repeat: 5, yoyo: true, ease: 'none' }, '<')
-      tl.add(() => setStatus('READY'), '>-0.1')
+      tl.add(() => machine.classList.add('is-powered'), 0.22)
+      tl.to(machine, { x: 1.1, duration: 0.055, repeat: 4, yoyo: true, ease: 'sine.inOut' }, 0.3)
+      tl.add(() => setStatus('READY'), 0.68)
 
-      // 2 · feed: discrete stepper steps, synced with the counter and heat line
-      const feedDuration = 3.4
+      // 2 · feed — one eased value drives strip, counter, heat line and ink queue
+      tl.addLabel('feed', 0.94)
       tl.to(
         feed,
         {
           pct: 100,
-          duration: feedDuration,
-          ease: 'steps(34)',
-          onUpdate: () => setFeed(100 - feed.pct),
+          duration: FEED,
+          ease: FEED_EASE,
+          onUpdate: () => {
+            setFeed(100 - feed.pct)
+            setCounter(feed.pct)
+            drainInk(feed.pct)
+          },
         },
         'feed'
       )
-      tl.to(
-        counter,
-        {
-          pct: 100,
-          duration: feedDuration,
-          ease: 'steps(34)',
-          onUpdate: () => setCounter(counter.pct),
-        },
-        'feed'
-      )
-      tl.fromTo(
-        paper,
-        { y: -14 },
-        { y: 0, duration: feedDuration, ease: 'steps(34)' },
-        'feed'
-      )
+      tl.fromTo(paper, { y: -14 }, { y: 0, duration: FEED, ease: FEED_EASE }, 'feed')
       if (heat) {
         tl.fromTo(
           heat,
-          { top: '0%', opacity: 0.9 },
-          { top: '100%', duration: feedDuration, ease: 'steps(34)' },
+          { y: 0, opacity: 0.95 },
+          { y: Math.max(0, stripHeight - 18), duration: FEED, ease: FEED_EASE },
           'feed'
         )
       }
@@ -716,7 +810,7 @@ export function CheckoutContent({
         bodyRumble.play()
       }, 'feed')
 
-      // 3 · motor brakes, strip settles with a short mechanical bounce
+      // 3 · the motor brakes, the strip settles, the run is complete
       tl.add(() => {
         paperJitter.kill()
         bodyRumble.kill()
@@ -724,16 +818,14 @@ export function CheckoutContent({
         gsap.set(machine, { x: 0, y: 0 })
         machine.classList.remove('is-printing')
         machine.classList.add('is-done')
-      }, 'feed+=3.4')
-      tl.add(() => {
         setStatus('DONE')
         setCounter(100)
-      }, 'feed+=3.4')
-      tl.to(paper, { rotate: 0.35, duration: 0.16, ease: 'power2.out' }, 'feed+=3.42')
-      tl.to(paper, { rotate: 0, y: -3, duration: 0.34, ease: 'back.out(3)' }, '>-0.02')
-      tl.to(paper, { y: 0, duration: 0.26, ease: 'power2.inOut' }, '>-0.05')
-      if (heat) tl.to(heat, { opacity: 0, duration: 0.3 }, '<')
-      tl.to(paper, { scaleY: 1.006, duration: 0.12, ease: 'power1.out' }, '<')
+      }, `feed+=${FEED}`)
+      tl.to(paper, { rotate: 0.35, duration: 0.18, ease: 'power2.out' }, `feed+=${FEED + 0.04}`)
+      tl.to(paper, { rotate: 0, y: -3.5, duration: 0.36, ease: 'back.out(2.4)' }, '>-0.02')
+      tl.to(paper, { y: 0, duration: 0.3, ease: 'power2.inOut' }, '>-0.06')
+      if (heat) tl.to(heat, { opacity: 0, duration: 0.4 }, '<')
+      tl.to(paper, { scaleY: 1.004, duration: 0.12, ease: 'power1.out' }, '<')
       tl.to(paper, { scaleY: 1, duration: 0.3, ease: 'power2.out' })
     }, machineRef)
 
@@ -742,6 +834,10 @@ export function CheckoutContent({
       machine.classList.remove('is-powered', 'is-printing', 'is-done')
       paper.style.clipPath = ''
       paper.style.willChange = ''
+      // GSAP reverts its own tweens, but a mid-flight typewriter must not leave
+      // a half-printed transaction id behind if the view unmounts.
+      typedEl?.classList.remove('is-typing')
+      if (typedEl) typedEl.textContent = typedText
     }
   }, [step, receiptData])
 
@@ -1193,7 +1289,7 @@ export function CheckoutContent({
                   </div>
                   <div className="meta-row">
                     <span className="label">TXN ID:</span>
-                    <span className="val mono">{receiptData.transactionId}</span>
+                    <span className="val mono" data-print="txn">{receiptData.transactionId}</span>
                   </div>
                   <div className="meta-row">
                     <span className="label">DATE:</span>

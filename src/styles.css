@@ -4232,6 +4232,9 @@ html[data-anim-fallback='static'] .pop-word { will-change: auto; }
   pointer-events: none;
   filter: blur(3px);
   background: linear-gradient(180deg, rgba(216, 255, 106, .5), rgba(216, 255, 106, 0));
+  /* GSAP moves this with a transform, not `top`, so the glow stays on the
+     compositor and tracks the reveal edge without layout work. */
+  will-change: transform;
 }
 
 /* The strip itself — clipped by GSAP to reveal it as it feeds */
@@ -4336,6 +4339,24 @@ html[data-anim-fallback='static'] .pop-word { will-change: auto; }
   .receipt-paper { clip-path: none !important; }
   .printer-heat-line { display: none; }
   .printer-machine.is-printing .printer-led { animation: none; }
+}
+
+/* Typed-in receipt values (the transaction id): a hard block caret that blinks
+   while the print head lays down one character at a time. */
+.receipt-inner .is-typing::after {
+  content: '';
+  display: inline-block;
+  width: .46em;
+  height: .92em;
+  margin-left: 2px;
+  vertical-align: -.08em;
+  background: currentColor;
+  animation: receiptCaret .55s steps(2, start) infinite;
+}
+
+@keyframes receiptCaret {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
 }
 
 /* Serrated edges on top & bottom */

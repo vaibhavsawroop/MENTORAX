@@ -15,6 +15,12 @@ Add the supplied files using these names (or update the matching paths in `src/d
 
 Book covers are cropped from the supplied print-ready wraparound PDFs (front panel only) and exported as WebP at 760 px and 400 px wide. Keep both sizes in step if a cover is replaced — the pages reference them through `srcset` in `src/App.tsx` and `src/data.ts`.
 
+The transactional emails also use one generated asset:
+
+- `email/wordmark.png` — the email header lockup (logo tile + Syne wordmark + tagline), rendered at 2× and displayed at 332×54.
+
+It is baked with `py scripts/render-email-wordmark.py` (from `public/logo.png` plus the Syne subset in `scripts/assets/`) and referenced by `api/_email.ts`. Emails deliberately load no web fonts — a font request is blocked or delayed in most mail clients, which is what used to flash the wordmark in a fallback face. Regenerate the image whenever the lockup, tagline or card colour changes.
+
 Use crisp, web-optimised source images. Preferred formats are AVIF or WebP for photography and JPEG/PNG only when the original artwork requires them. Keep the final filenames and update the extension in `src/data.ts` together.
 
 The shared Google Drive resource hub is recorded in `src/data.ts`. Individual study-material and purchase links are deliberately empty until the MentoraX team provides the final URLs.

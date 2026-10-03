@@ -5,11 +5,14 @@
  * ------------
  * • One shared shell so every MentoraX email (receipts, batch access, enquiry
  *   notifications, enquiry acknowledgements) looks like the same product.
- * • The header pairs the official logo with the MentoraX wordmark in **Syne** —
- *   the same display face used by the site's entrance sequence (`--display` in
- *   `src/styles.css`). Web fonts are blocked by many mail clients, so the font
- *   stack degrades to Plus Jakarta Sans, then the platform UI font: the wordmark
- *   still reads as a logotype everywhere.
+ * • The header (logo tile + Syne wordmark + tagline) is one small PNG baked on
+ *   the card colour by `scripts/render-email-wordmark.py`. We do NOT load a web font:
+ *   Gmail and Outlook strip or delay `@font-face`, so a text wordmark either
+ *   flashed in a fallback face or never arrived. A pre-sized image renders
+ *   instantly and identically everywhere — no font request, no FOUT, no layout
+ *   shift — which is how professional transactional emails feel "already there".
+ *   The display-font stack below is only a graceful fallback for headings, which
+ *   must stay live text (they interpolate the student's name).
  * • Layout is table-based with inline styles (no flexbox/grid) so Gmail,
  *   Outlook, Apple Mail and mobile clients all render it correctly.
  * • Every user-supplied value is HTML-escaped before interpolation.
@@ -27,7 +30,11 @@ export const BRAND = {
   tagline: 'Science of a clear path',
   site: 'https://mentoraxs.com',
   logo: 'https://mentoraxs.com/logo.png',
-  /** Mirrors `--display` from src/styles.css so email matches the site. */
+  /** Baked header lockup — see `scripts/render-email-wordmark.py`. 332×54. */
+  wordmark: 'https://mentoraxs.com/assets/email/wordmark.png',
+  wordmarkWidth: 332,
+  wordmarkHeight: 54,
+  /** Fallback stack for live headings; mirrors `--display` from src/styles.css. */
   displayFont: "'Syne', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
   bodyFont: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
   monoFont: "'JetBrains Mono', 'SFMono-Regular', Menlo, Consolas, 'Courier New', monospace",
@@ -76,19 +83,15 @@ export type OrderEmailData = {
 
 const COLORS = BRAND.colors
 
-function wordmarkTag(size = 27): string {
-  return `<div style="font-family:${BRAND.displayFont};font-weight:800;font-size:${size}px;line-height:1;letter-spacing:-0.03em;color:${COLORS.text};">
-              MENTORA<span style="color:${COLORS.lilac};">X</span>
-            </div>`
-}
-
-/** Rounded white tile holding the official logo — reads correctly on the dark card. */
-function logoTile(size = 46): string {
-  return `<td width="${size}" valign="middle" style="padding:0 14px 0 0;">
-            <div style="width:${size}px;height:${size}px;border-radius:12px;overflow:hidden;background:#ffffff;box-shadow:0 6px 18px rgba(0,0,0,0.35);">
-              <img src="${BRAND.logo}" width="${size}" height="${size}" alt="MentoraX" style="display:block;width:${size}px;height:${size}px;border:0;outline:none;text-decoration:none;" />
-            </div>
-          </td>`
+/**
+ * The whole brand lockup as one pre-sized image.
+ *
+ * `width`/`height` attributes keep clients that ignore CSS from reflowing,
+ * while the inline `width:100%;max-width:332px;height:auto` lets narrow
+ * screens scale it without distorting the aspect ratio.
+ */
+function wordmarkImage(): string {
+  return `<img src="${BRAND.wordmark}" width="${BRAND.wordmarkWidth}" height="${BRAND.wordmarkHeight}" alt="MentoraX — ${esc(BRAND.tagline)}" style="display:block;width:100%;max-width:${BRAND.wordmarkWidth}px;height:auto;border:0;outline:none;text-decoration:none;" />`
 }
 
 function badge(label: string, color: string = COLORS.lime): string {
@@ -168,10 +171,6 @@ export function emailShell({
   <meta name="color-scheme" content="dark light" />
   <meta name="supported-color-schemes" content="dark light" />
   <title>${esc(heading)}</title>
-  <!-- Progressive enhancement: clients that support web fonts render the
-       wordmark in Syne (the site's display face); everyone else falls back. -->
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&display=swap" rel="stylesheet" />
   <style>
     @media (max-width:600px) {
       .mx-shell { padding:16px 12px !important; }
@@ -193,14 +192,10 @@ export function emailShell({
               <!-- top accent -->
               <div style="height:4px;line-height:4px;font-size:0;border-radius:999px;margin-bottom:24px;background:linear-gradient(90deg,${COLORS.lilac} 0%,${COLORS.lime} 55%,${COLORS.peach} 100%);">&nbsp;</div>
 
-              <!-- header -->
+              <!-- header: one baked image — no web fonts, no render flash -->
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
                 <tr>
-                  ${logoTile()}
-                  <td valign="middle" class="mx-stack">
-                    ${wordmarkTag()}
-                    <div style="margin-top:6px;font-family:${BRAND.bodyFont};font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:${COLORS.muted};">${esc(BRAND.tagline)}</div>
-                  </td>
+                  <td valign="middle" class="mx-stack" style="padding:0 14px 0 0;">${wordmarkImage()}</td>
                   <td valign="middle" align="right" class="mx-stack" style="padding-top:14px;">${badge(badgeLabel, badgeColor)}</td>
                 </tr>
               </table>
