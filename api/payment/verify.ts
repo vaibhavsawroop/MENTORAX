@@ -111,9 +111,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           subject: `Payment Confirmed: ${productName} — Receipt #${receiptNo}`,
           html: `
             <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 620px; margin: 0 auto; padding: 24px; background: #0c0b16; color: #f4f1ec; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
-              <div style="text-align: center; padding-bottom: 20px; border-bottom: 1px dashed rgba(255,255,255,0.2);">
-                <h1 style="color: #d8ff6a; margin: 0; font-size: 26px;">MENTORAX</h1>
-                <p style="color: #a8a3bb; margin: 4px 0 0; font-size: 13px;">Official Payment Receipt &amp; Order Confirmation</p>
+              <div style="text-align: center; padding-bottom: 24px; border-bottom: 1px solid rgba(255,255,255,0.08);">
+                <img src="https://mentoraxs.com/logo.png" alt="MentoraX" style="height: 48px; margin-bottom: 12px;" />
+                <p style="color: #a8a3bb; margin: 0; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Official Payment Receipt</p>
               </div>
 
               <div style="margin: 20px 0; background: rgba(255,255,255,0.03); padding: 18px; border-radius: 8px;">
@@ -156,9 +156,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           subject: `Welcome to ${productName} — Receipt #${receiptNo}`,
           html: `
             <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 620px; margin: 0 auto; padding: 24px; background: #0c0b16; color: #f4f1ec; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
-              <div style="text-align: center; padding-bottom: 20px; border-bottom: 1px dashed rgba(255,255,255,0.2);">
-                <h1 style="color: #d8ff6a; margin: 0; font-size: 26px;">MENTORAX</h1>
-                <p style="color: #a8a3bb; margin: 4px 0 0; font-size: 13px;">Official Payment Receipt &amp; Batch Access</p>
+              <div style="text-align: center; padding-bottom: 24px; border-bottom: 1px solid rgba(255,255,255,0.08);">
+                <img src="https://mentoraxs.com/logo.png" alt="MentoraX" style="height: 48px; margin-bottom: 12px;" />
+                <p style="color: #a8a3bb; margin: 0; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Official Batch Enrollment</p>
               </div>
 
               <div style="margin: 20px 0; background: rgba(255,255,255,0.03); padding: 18px; border-radius: 8px;">
