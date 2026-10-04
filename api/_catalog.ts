@@ -75,9 +75,11 @@ export type ResolvedProduct = {
 /** Resolve a client-supplied product id (alias-aware). Returns null when unknown. */
 export function resolveProduct(rawId: unknown): ResolvedProduct | null {
   if (typeof rawId !== 'string' || !rawId) return null
-  const canonical = PRODUCT_ALIASES[rawId] ?? rawId
+  const canonical = Object.prototype.hasOwnProperty.call(PRODUCT_ALIASES, rawId)
+    ? PRODUCT_ALIASES[rawId]
+    : rawId
+  if (!Object.prototype.hasOwnProperty.call(PRODUCTS, canonical)) return null
   const product = PRODUCTS[canonical]
-  if (!product) return null
   return { id: canonical, product }
 }
 

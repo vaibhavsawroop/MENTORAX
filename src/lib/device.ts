@@ -63,7 +63,7 @@ export function getDeviceProfile(): DeviceProfile {
     isTouch,
     reducedMotion,
     maxDpr,
-    allowDecorativeWebGL: tier !== 'low' && !reducedMotion,
+    allowDecorativeWebGL: !isMobile && tier !== 'low' && !reducedMotion,
   }
   return cached
 }

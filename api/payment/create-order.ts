@@ -1,4 +1,5 @@
 import type { ApiRequest, ApiResponse } from '../_types.js'
+import { isSameOriginRequest } from '../_security.js'
 import Razorpay from 'razorpay'
 import { hasCompleteAddress, priceInPaise, resolveProduct, type ShippingAddress } from '../_catalog.js'
 
@@ -17,18 +18,8 @@ import { hasCompleteAddress, priceInPaise, resolveProduct, type ShippingAddress 
  * silent mock made a broken deployment look like a working checkout.
  */
 
-const CORS_HEADERS = {
-  'Access-Control-Allow-Credentials': 'true',
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET,OPTIONS,PATCH,DELETE,POST,PUT',
-  'Access-Control-Allow-Headers':
-    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version',
-}
-
 export default async function handler(req: ApiRequest, res: ApiResponse) {
-  for (const [name, value] of Object.entries(CORS_HEADERS)) res.setHeader(name, value)
-
-  if (req.method === 'OPTIONS') return res.status(200).end()
+  if (!isSameOriginRequest(req)) return res.status(403).json({ error: 'Cross-origin request denied.' })
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
   try {
@@ -36,6 +27,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
       productId?: string
       studentName?: string
       studentEmail?: string
+      studentPhone?: string
       shippingAddress?: ShippingAddress
     }
 
@@ -43,17 +35,51 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     if (!resolved) return res.status(400).json({ error: 'Invalid product ID.' })
 
     const { id: productId, product } = resolved
+    const studentName = typeof body.studentName === 'string' ? body.studentName.trim() : ''
+    const studentEmail = typeof body.studentEmail === 'string' ? body.studentEmail.trim() : ''
+    const studentPhone = typeof body.studentPhone === 'string' ? body.studentPhone.trim() : ''
 
-    if (product.type === 'book' && !hasCompleteAddress(body.shippingAddress)) {
+    if (!studentName || studentName.length > 120 || /[\r\n]/.test(studentName)) {
+      return res.status(400).json({ error: 'Enter a valid name.' })
+    }
+    if (studentEmail.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(studentEmail)) {
+      return res.status(400).json({ error: 'Enter a valid email address.' })
+    }
+    if (studentPhone && (studentPhone.length > 20 || !/^[+()\d -]{7,20}$/.test(studentPhone))) {
+      return res.status(400).json({ error: 'Enter a valid phone number.' })
+    }
+
+    const address = body.shippingAddress
+
+    if (product.type === 'book' && (
+      !hasCompleteAddress(address) ||
+      typeof address.street !== 'string' || !address.street.trim() || address.street.trim().length > 200 ||
+      typeof address.city !== 'string' || !address.city.trim() || address.city.trim().length > 80 ||
+      typeof address.state !== 'string' || !address.state.trim() || address.state.trim().length > 80 ||
+      typeof address.pincode !== 'string' || !/^\d{6}$/.test(address.pincode.trim())
+    )) {
       return res.status(400).json({ error: 'Complete shipping address is required for book orders.' })
     }
+
+    const shippingAddress = product.type === 'book' && address
+      ? {
+          street: address.street!.trim(),
+          city: address.city!.trim(),
+          state: address.state!.trim(),
+          pincode: address.pincode!.trim(),
+        }
+      : undefined
 
     const keyId = process.env.RAZORPAY_KEY_ID
     const keySecret = process.env.RAZORPAY_KEY_SECRET
 
     if (!keyId || !keySecret) {
       // Local development may explicitly opt into a simulation; production never does.
-      if (process.env.ALLOW_MOCK_PAYMENTS === 'true') {
+      if (
+        process.env.ALLOW_MOCK_PAYMENTS === 'true' &&
+        process.env.NODE_ENV !== 'production' &&
+        process.env.VERCEL !== '1'
+      ) {
         return res.status(200).json({
           success: true,
           mock: true,
@@ -86,14 +112,15 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
         productId,
         productName: product.name,
         productType: product.type,
-        studentEmail: body.studentEmail || '',
-        studentName: body.studentName || '',
-        ...(product.type === 'book' && body.shippingAddress
+        studentEmail,
+        studentName,
+        studentPhone,
+        ...(shippingAddress
           ? {
-              shippingStreet: body.shippingAddress.street || '',
-              shippingCity: body.shippingAddress.city || '',
-              shippingState: body.shippingAddress.state || '',
-              shippingPincode: body.shippingAddress.pincode || '',
+              shippingStreet: shippingAddress.street,
+              shippingCity: shippingAddress.city,
+              shippingState: shippingAddress.state,
+              shippingPincode: shippingAddress.pincode,
             }
           : {}),
       },

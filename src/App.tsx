@@ -529,11 +529,11 @@ function Layout() {
 function DeferredHeroScene() {
   const ref = useRef<HTMLDivElement>(null)
   const [nearViewport, setNearViewport] = useState(false)
-  const { tier, reducedMotion } = getDeviceProfile()
+  const { tier, reducedMotion, isTouch } = getDeviceProfile()
 
   useEffect(() => {
     const el = ref.current
-    if (!el || tier === 'low' || reducedMotion) return
+    if (!el || tier === 'low' || reducedMotion || isTouch) return
     const observer = new IntersectionObserver(
       ([entry]) => {
         setNearViewport(entry.isIntersecting)
@@ -542,7 +542,7 @@ function DeferredHeroScene() {
     )
     observer.observe(el)
     return () => observer.disconnect()
-  }, [tier, reducedMotion])
+  }, [tier, reducedMotion, isTouch])
 
   return (
     <div ref={ref} className="closing-orb" data-parallax="-0.1" aria-hidden="true">
@@ -585,7 +585,7 @@ function TestimonialsSection() {
   const next = useCallback(() => setActive(i => (i + 1) % total), [total])
 
   useEffect(() => {
-    if (paused || prefersReduced) return
+    if (paused || prefersReduced || getDeviceProfile().isMobile) return
     const id = setInterval(next, 4600)
     return () => clearInterval(id)
   }, [paused, next, prefersReduced])
@@ -1338,28 +1338,20 @@ function Contact() {
     setPending(true)
     setError('')
     try {
-      // Our serverless endpoint (Vercel + Resend). Falls back to Netlify
-      // Forms below when the API isn't reachable, so the form always works.
+      // Our serverless endpoint (Vercel + Resend).
       const res = await fetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(fields),
       })
-      if (!res.ok) throw new Error(`api ${res.status}`)
+      const result = await res.json().catch(() => ({}))
+      if (!res.ok || !result.success) {
+        setError(result.error || 'That did not go through. Please try again or email us directly.')
+        return
+      }
       setSubmitted(true)
     } catch {
-      try {
-        const body = new URLSearchParams(fields as Record<string, string>).toString()
-        const fallback = await fetch('/', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body,
-        })
-        if (!fallback.ok) throw new Error('fallback failed')
-        setSubmitted(true)
-      } catch {
-        setError('That didn\'t go through — please email managementrajiiserit@gmail.com and we\'ll reply quickly.')
-      }
+      setError('That did not go through. Please try again or email managementrajiiserit@gmail.com.')
     } finally {
       setPending(false)
     }
@@ -1396,7 +1388,7 @@ function Contact() {
               >
                 <div className="success-icon"><Check size={32} /></div>
                 <h3>Thank you for reaching out.</h3>
-                <p>Your enquiry has been staged. The MentoraX team will respond through the official contact channel once it is live.</p>
+                <p>Your enquiry is on its way. The MentoraX team will respond using the contact details you provided.</p>
                 <button type="button" onClick={() => setSubmitted(false)} className="success-reset">Send another enquiry <ArrowRight size={15} /></button>
               </motion.div>
             ) : (

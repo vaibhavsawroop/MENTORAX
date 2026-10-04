@@ -119,12 +119,12 @@ export default defineConfig(({ mode }) => {
     server: {
       host: '0.0.0.0',
       port: 5000,
-      allowedHosts: true,
+      allowedHosts: ['localhost', '127.0.0.1', '.replit.dev', '.replit.app'],
     },
     preview: {
       host: '0.0.0.0',
       port: 5000,
-      allowedHosts: true,
+      allowedHosts: ['localhost', '127.0.0.1', '.replit.dev', '.replit.app'],
     },
   }
 })

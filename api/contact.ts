@@ -1,4 +1,5 @@
 import type { ApiRequest, ApiResponse } from './_types.js'
+import { isSameOriginRequest } from './_security.js'
 import {
   SUPPORT_EMAIL,
   fromCandidates,
@@ -15,18 +16,8 @@ import {
  * response instead of silently disappearing.
  */
 
-const CORS_HEADERS = {
-  'Access-Control-Allow-Credentials': 'true',
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET,OPTIONS,PATCH,DELETE,POST,PUT',
-  'Access-Control-Allow-Headers':
-    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version',
-}
-
 export default async function handler(req: ApiRequest, res: ApiResponse) {
-  for (const [name, value] of Object.entries(CORS_HEADERS)) res.setHeader(name, value)
-
-  if (req.method === 'OPTIONS') return res.status(200).end()
+  if (!isSameOriginRequest(req)) return res.status(403).json({ error: 'Cross-origin request denied.' })
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
   try {
@@ -37,11 +28,31 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
       exam?: string
       interest?: string
       message?: string
+      'bot-field'?: string
+    }
+
+    if (typeof body['bot-field'] === 'string' && body['bot-field'].trim()) {
+      return res.status(200).json({ success: true })
     }
 
     const { name, email, message } = body
-    if (!name || !email || !message) {
+    if (typeof name !== 'string' || typeof email !== 'string' || typeof message !== 'string') {
       return res.status(400).json({ error: 'Name, email, and message are required.' })
+    }
+    const cleanName = name.trim()
+    const cleanEmail = email.trim()
+    const cleanMessage = message.trim()
+    if (
+      !cleanName || cleanName.length > 120 || /[\r\n]/.test(cleanName) ||
+      !cleanEmail || cleanEmail.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail) ||
+      !cleanMessage || cleanMessage.length > 4000 ||
+      (body.phone !== undefined && (typeof body.phone !== 'string' || body.phone.length > 30)) ||
+      (body.exam !== undefined && (typeof body.exam !== 'string' || body.exam.length > 60)) ||
+      (body.interest !== undefined && (
+        typeof body.interest !== 'string' || body.interest.length > 80 || /[\r\n]/.test(body.interest)
+      ))
+    ) {
+      return res.status(400).json({ error: 'Please check the enquiry details and try again.' })
     }
 
     const apiKey = process.env.RESEND_API_KEY
@@ -50,45 +61,33 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     const dateStr = `${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })} IST`
 
     if (!apiKey) {
-      console.error('[contact] RESEND_API_KEY missing — enquiry stored in logs only:', {
-        name,
-        email,
-        phone: body.phone,
-        exam: body.exam,
-        interest: body.interest,
-        message,
-        dispatchedTo: adminEmail,
-      })
-      return res.status(200).json({
-        success: true,
-        emailDelivered: false,
-        message: 'Enquiry received. Email delivery is not configured, so our team will follow up manually.',
-      })
+      console.error('[contact] RESEND_API_KEY is not configured; enquiry was not delivered.')
+      return res.status(503).json({ error: 'Enquiry email is temporarily unavailable. Please email us directly.' })
     }
 
     const owner = await sendEmail({
       apiKey,
       senders,
       to: [adminEmail],
-      subject: `[MentoraX enquiry] ${body.interest || 'General'} — ${name}`,
+      subject: `[MentoraX enquiry] ${body.interest || 'General'} — ${cleanName}`,
       html: renderContactAdminEmail({
-        name,
-        email,
+        name: cleanName,
+        email: cleanEmail,
         phone: body.phone,
         exam: body.exam,
         interest: body.interest,
-        message,
+        message: cleanMessage,
         dateStr,
       }),
-      replyTo: email,
+      replyTo: cleanEmail,
     })
 
     const student = await sendEmail({
       apiKey,
       senders,
-      to: [email],
+      to: [cleanEmail],
       subject: "We've received your enquiry · MentoraX",
-      html: renderContactAckEmail({ name, interest: body.interest, exam: body.exam }),
+      html: renderContactAckEmail({ name: cleanName, interest: body.interest, exam: body.exam }),
       replyTo: adminEmail,
     })
 

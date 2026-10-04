@@ -404,6 +404,7 @@ export function CheckoutContent({
           productId: product.id,
           studentName: formData.name,
           studentEmail: formData.email,
+          studentPhone: formData.phone,
           shippingAddress,
         }),
       })
@@ -507,12 +508,6 @@ export function CheckoutContent({
           razorpay_order_id: response.razorpay_order_id,
           razorpay_payment_id: response.razorpay_payment_id,
           razorpay_signature: response.razorpay_signature,
-          studentName: formData.name,
-          studentEmail: formData.email,
-          studentPhone: formData.phone,
-          productId: product.id,
-          amount: product.price,
-          shippingAddress,
         }),
       })
 

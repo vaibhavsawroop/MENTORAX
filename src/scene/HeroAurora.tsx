@@ -151,7 +151,7 @@ export function HeroAurora() {
     if (!wrap || !canvas) return
 
     const { tier, reducedMotion, isTouch } = getDeviceProfile()
-    const staticOnly = reducedMotion || tier === 'low'
+    const staticOnly = reducedMotion || tier === 'low' || isTouch
     const maxDpr = tier === 'high' ? 1.75 : 1
     const frameSkip = tier === 'high' ? 1 : 2
 

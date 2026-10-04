@@ -1,4 +1,5 @@
 import type { ApiRequest, ApiResponse } from '../_types.js'
+import { isSameOriginRequest } from '../_security.js'
 import crypto from 'node:crypto'
 import Razorpay from 'razorpay'
 import { formatAddress, hasCompleteAddress, resolveProduct, priceInPaise, type ShippingAddress } from '../_catalog.js'
@@ -22,22 +23,12 @@ import {
  * --------------
  * 1. The HMAC signature is recomputed with RAZORPAY_KEY_SECRET. A mismatch is
  *    rejected outright — no receipt, no email, no access.
- * 2. What was *actually* bought is read back from Razorpay's order (`notes.productId`
- *    was written by create-order.ts) instead of trusting the browser. Without
- *    this step a customer could pay ₹499 and then claim a ₹10,000 batch to
- *    receive its WhatsApp invite.
- * 3. The batch WhatsApp invite is only released when step 2 succeeded. If
- *    Razorpay's API is unreachable we still show the receipt, but the invite is
- *    withheld and the owner is told a manual check is needed.
+ * 2. Product, price and customer details come from the server-created order,
+ *    and the payment must be captured, associated with that order, and match
+ *    the catalogue amount.
+ * 3. If Razorpay's API is unreachable, verification fails closed. No receipt,
+ *    email or batch access is issued until status can be confirmed.
  */
-
-const CORS_HEADERS = {
-  'Access-Control-Allow-Credentials': 'true',
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET,OPTIONS,PATCH,DELETE,POST,PUT',
-  'Access-Control-Allow-Headers':
-    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version',
-}
 
 const BATCH_WHATSAPP_LINKS: Record<string, string> = {
   genesis: process.env.WA_LINK_GENESIS || '',
@@ -50,9 +41,7 @@ function indianTimestamp(): string {
 }
 
 export default async function handler(req: ApiRequest, res: ApiResponse) {
-  for (const [name, value] of Object.entries(CORS_HEADERS)) res.setHeader(name, value)
-
-  if (req.method === 'OPTIONS') return res.status(200).end()
+  if (!isSameOriginRequest(req)) return res.status(403).json({ error: 'Cross-origin request denied.' })
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
   try {
@@ -60,19 +49,11 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
       razorpay_order_id?: string
       razorpay_payment_id?: string
       razorpay_signature?: string
-      studentName?: string
-      studentEmail?: string
-      studentPhone?: string
-      productId?: string
-      amount?: number | string
-      shippingAddress?: ShippingAddress
     }
 
-    const {
-      razorpay_order_id: orderId,
-      razorpay_payment_id: paymentId,
-      razorpay_signature: signature,
-    } = body
+    const orderId = body.razorpay_order_id
+    const paymentId = body.razorpay_payment_id
+    const signature = body.razorpay_signature
 
     const keyId = process.env.RAZORPAY_KEY_ID
     const keySecret = process.env.RAZORPAY_KEY_SECRET
@@ -80,9 +61,17 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     const adminEmail = process.env.ADMIN_EMAIL || SUPPORT_EMAIL
     const senders = fromCandidates(process.env.FROM_EMAIL)
 
-    if (!keySecret || !orderId || !paymentId || !signature) {
+    if (
+      !orderId || !paymentId || !signature ||
+      !/^order_[A-Za-z0-9]+$/.test(orderId) ||
+      !/^pay_[A-Za-z0-9]+$/.test(paymentId) ||
+      !/^[a-fA-F0-9]{64}$/.test(signature)
+    ) {
       console.error('[verify] missing payment verification parameters')
       return res.status(400).json({ error: 'Missing payment verification parameters.' })
+    }
+    if (!keyId || !keySecret) {
+      return res.status(503).json({ error: 'Payments are not configured for verification.' })
     }
 
     /* ── STEP 1 · signature ─────────────────────────────────────── */
@@ -91,60 +80,60 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
       .update(`${orderId}|${paymentId}`)
       .digest('hex')
 
-    const signatureValid = expected.length === signature.length &&
-      crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(signature))
+    const signatureValid = crypto.timingSafeEqual(Buffer.from(expected, 'hex'), Buffer.from(signature, 'hex'))
 
     if (!signatureValid) {
       console.error(`[verify] signature mismatch for order ${orderId}`)
       return res.status(400).json({ error: 'Invalid payment signature. Verification failed.' })
     }
 
-    /* ── STEP 2 · what was really bought ────────────────────────── */
-    let resolved = resolveProduct(body.productId)
-    let productVerified = false
-    let amountInPaise: number | null = null
-
-    if (keyId && keySecret) {
-      try {
-        const rzp = new Razorpay({ key_id: keyId, key_secret: keySecret })
-        const order = await rzp.orders.fetch(orderId)
-        const notes = (order.notes || {}) as Record<string, string>
-        amountInPaise = typeof order.amount === 'number' ? order.amount : null
-
-        const fromRazorpay = resolveProduct(notes.productId)
-        if (fromRazorpay) resolved = fromRazorpay
-        productVerified = Boolean(fromRazorpay)
-
-        if (!fromRazorpay) {
-          console.error(`[verify] order ${orderId} has no usable productId note`, notes)
-        }
-      } catch (err) {
-        // Network/API hiccup: fall back to the signed request, but withhold
-        // anything access-granting and flag it for the owner.
-        console.error(`[verify] could not fetch Razorpay order ${orderId}:`, err)
-      }
+    /* ── STEP 2 · confirm the captured payment and its order ─────── */
+    const rzp = new Razorpay({ key_id: keyId, key_secret: keySecret })
+    const fetched = await Promise.all([
+      rzp.orders.fetch(orderId),
+      rzp.payments.fetch(paymentId),
+    ]).catch((err) => {
+      console.error(`[verify] could not fetch Razorpay payment for order ${orderId}:`, err)
+      return null
+    })
+    if (!fetched) {
+      return res.status(503).json({ error: 'Payment status could not be confirmed. Please retry shortly.' })
     }
+    const [order, payment] = fetched
 
-    if (!resolved) {
+    const notes = (order.notes || {}) as Record<string, string>
+    const resolved = resolveProduct(notes.productId)
+    if (!resolved || notes.productType !== resolved.product.type) {
+      console.error(`[verify] order ${orderId} has no usable product notes`)
       return res.status(400).json({ error: 'Unknown product for this payment.' })
     }
 
     const { id: productId, product } = resolved
     const expectedPaise = priceInPaise(product)
-
-    // When Razorpay told us the real amount, it must match the catalogue.
-    if (amountInPaise !== null && amountInPaise !== expectedPaise) {
-      console.error(
-        `[verify] amount mismatch for order ${orderId}: Razorpay says ${amountInPaise} paise, catalogue expects ${expectedPaise} for ${productId}`
-      )
+    if (
+      order.id !== orderId || order.currency !== 'INR' || order.status !== 'paid' ||
+      order.amount !== expectedPaise || order.amount_paid !== expectedPaise || order.amount_due !== 0 ||
+      payment.id !== paymentId || payment.order_id !== orderId || payment.currency !== 'INR' ||
+      payment.amount !== expectedPaise || payment.status !== 'captured' || !payment.captured
+    ) {
+      console.error(`[verify] unpaid or mismatched order/payment rejected for ${orderId}`)
       return res.status(400).json({ error: 'Payment amount does not match the product price.' })
     }
 
-    // Secondary check against the signed client value (only used when Razorpay
-    // was unreachable, where it cannot contradict a trusted amount).
-    if (amountInPaise === null && body.amount !== undefined && Number(body.amount) !== product.priceINR) {
-      console.error(`[verify] client amount ${body.amount} does not match catalogue ₹${product.priceINR} for ${productId}`)
-      return res.status(400).json({ error: 'Payment amount does not match the product price.' })
+    const productVerified = true
+    const studentName = notes.studentName || 'Aspirant'
+    const studentEmail = notes.studentEmail || ''
+    const studentPhone = notes.studentPhone || undefined
+    const shippingAddress: ShippingAddress | undefined = product.type === 'book'
+      ? {
+          street: notes.shippingStreet,
+          city: notes.shippingCity,
+          state: notes.shippingState,
+          pincode: notes.shippingPincode,
+        }
+      : undefined
+    if (product.type === 'book' && !hasCompleteAddress(shippingAddress)) {
+      return res.status(400).json({ error: 'The order is missing its shipping address.' })
     }
 
     /* ── STEP 3 · receipt data ──────────────────────────────────── */
@@ -152,12 +141,10 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     const dateStr = `${indianTimestamp()} IST`
     const whatsappLink = product.type === 'batch' ? BATCH_WHATSAPP_LINKS[productId] || '' : ''
     const whatsappAllowed = product.type === 'batch' && productVerified && Boolean(whatsappLink)
-    const shippingAddress = hasCompleteAddress(body.shippingAddress) ? body.shippingAddress : undefined
-
     const orderEmail = {
-      studentName: body.studentName || 'Aspirant',
-      studentEmail: body.studentEmail || '',
-      studentPhone: body.studentPhone,
+      studentName,
+      studentEmail,
+      studentPhone,
       productName: product.name,
       productType: product.type,
       priceINR: product.priceINR,
@@ -182,11 +169,11 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
         ? `Payment confirmed · ${product.name} · Receipt ${receiptNo}`
         : `Welcome to ${product.name} · Receipt ${receiptNo}`
 
-      if (body.studentEmail) {
+      if (studentEmail) {
         emailStatuses.student = await sendEmail({
           apiKey: resendKey,
           senders,
-          to: [body.studentEmail],
+          to: [studentEmail],
           subject: studentSubject,
           html: studentHtml,
           replyTo: adminEmail,
@@ -197,13 +184,13 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
         apiKey: resendKey,
         senders,
         to: [adminEmail],
-        subject: `[Payment received] ₹${product.priceINR} — ${body.studentName || 'Student'} (${product.name})`,
+        subject: `[Payment received] ₹${product.priceINR} — ${studentName} (${product.name})`,
         html: renderAdminOrderEmail(orderEmail),
-        replyTo: body.studentEmail || undefined,
+        replyTo: studentEmail || undefined,
       })
 
-      if (!emailStatuses.student?.ok && body.studentEmail) {
-        console.error(`[verify] student receipt email failed for ${body.studentEmail}`, emailStatuses.student.failures)
+      if (!emailStatuses.student?.ok && studentEmail) {
+        console.error(`[verify] student receipt email failed for ${studentEmail}`, emailStatuses.student.failures)
       }
     } else {
       console.error('[verify] RESEND_API_KEY is not configured — receipt emails were not sent.')
