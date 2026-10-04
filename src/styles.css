@@ -5299,3 +5299,228 @@ html[data-anim-fallback='static'] .pop-word { will-change: auto; }
   /* Smooth-scroll easing on touch is handled natively; drop the helper */
   .scroll-rule i { animation: none !important; }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   PRINT STYLES — Receipt only, clean black-on-white
+   ═══════════════════════════════════════════════════════════════════════ */
+@media print {
+  /* ── Reset the page ── */
+  @page {
+    size: auto;
+    margin: 12mm 10mm;
+  }
+
+  /* ── Hide EVERYTHING by default ── */
+  body > *,
+  header, nav, footer,
+  .navbar, .nav-bar, .site-nav,
+  .checkout-trust-bar,
+  .checkout-sidebar,
+  .checkout-form-panel,
+  .checkout-order-summary,
+  .receipt-actions-bar,
+  .printer-body,
+  .printer-display,
+  .printer-slot,
+  .printer-heat-line,
+  .printer-plate,
+  .receipt-serrated-edge,
+  .receipt-status-chips,
+  .checkout-trust-items,
+  .hero-section,
+  .page-transition-overlay,
+  .initial-reveal {
+    display: none !important;
+  }
+
+  /* ── Show ONLY the checkout page and receipt ── */
+  body,
+  #root,
+  .checkout-page-container,
+  .checkout-page-inner,
+  .checkout-content,
+  .printer-machine,
+  .printer-output,
+  .receipt-paper,
+  .receipt-inner {
+    display: block !important;
+    visibility: visible !important;
+  }
+
+  /* ── Strip all dark backgrounds and restore a clean white page ── */
+  html, body, #root,
+  .checkout-page-container,
+  .checkout-page-inner {
+    background: #fff !important;
+    color: #000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    min-height: auto !important;
+  }
+
+  /* ── The receipt paper itself ── */
+  .receipt-paper {
+    width: 100% !important;
+    max-width: 480px !important;
+    margin: 0 auto !important;
+    background: #fff !important;
+    color: #000 !important;
+    box-shadow: none !important;
+    border: 1px solid #ccc !important;
+    border-radius: 0 !important;
+    clip-path: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+    position: static !important;
+  }
+
+  .receipt-inner {
+    padding: 20px 24px !important;
+    opacity: 1 !important;
+  }
+
+  /* ── Make all receipt child elements visible ── */
+  .receipt-inner * {
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: none !important;
+    animation: none !important;
+    clip-path: none !important;
+  }
+
+  /* ── Header ── */
+  .receipt-header {
+    text-align: center;
+    margin-bottom: 16px !important;
+    border-bottom: 2px solid #000;
+    padding-bottom: 12px !important;
+  }
+
+  .receipt-logo {
+    font-size: 2rem !important;
+    color: #000 !important;
+  }
+
+  .receipt-logo .logo-x {
+    color: #444 !important;
+  }
+
+  .receipt-sub,
+  .receipt-tax-title {
+    color: #333 !important;
+  }
+
+  /* ── Dividers ── */
+  .receipt-divider-dash {
+    border-top: 1px dashed #666 !important;
+  }
+
+  .receipt-divider-solid {
+    border-top: 2px solid #000 !important;
+  }
+
+  /* ── Meta rows ── */
+  .meta-row {
+    display: flex !important;
+    justify-content: space-between !important;
+    font-size: 11pt !important;
+  }
+
+  .meta-row .label {
+    color: #444 !important;
+  }
+
+  .meta-row .val {
+    color: #000 !important;
+  }
+
+  /* ── Items table ── */
+  .item-head, .item-row {
+    display: grid !important;
+    grid-template-columns: 1fr 40px 80px !important;
+    font-size: 11pt !important;
+  }
+
+  .item-head {
+    border-bottom: 1px solid #999 !important;
+  }
+
+  /* ── Totals ── */
+  .tot-row {
+    display: flex !important;
+    justify-content: space-between !important;
+    color: #333 !important;
+    font-size: 11pt !important;
+  }
+
+  .tot-row.grand-total {
+    font-size: 13pt !important;
+    color: #000 !important;
+    border-top: 1px solid #000 !important;
+    padding-top: 6px !important;
+    margin-top: 4px !important;
+  }
+
+  /* ── Pin box (shipping / batch access) ── */
+  .receipt-pin-box {
+    border: 1px dashed #666 !important;
+    background: #f9f9f9 !important;
+    padding: 12px !important;
+    text-align: center !important;
+    page-break-inside: avoid !important;
+  }
+
+  .pin-title {
+    color: #333 !important;
+  }
+
+  .pin-code {
+    color: #000 !important;
+  }
+
+  .pin-note {
+    color: #555 !important;
+  }
+
+  /* ── Barcode ── */
+  .receipt-barcode-wrap {
+    margin: 16px 0 8px !important;
+  }
+
+  .receipt-barcode {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* ── Footer note ── */
+  .receipt-footer-note {
+    color: #444 !important;
+    font-size: 9pt !important;
+    margin-top: 12px !important;
+  }
+
+  /* ── Printer machine chrome — hide all of it ── */
+  .printer-machine {
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .printer-output {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* ── Typing cursor animation ── */
+  .is-typing::after {
+    display: none !important;
+  }
+
+  /* ── No page breaks inside the receipt ── */
+  .receipt-paper,
+  .receipt-inner {
+    page-break-inside: avoid !important;
+  }
+}
